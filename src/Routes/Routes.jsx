@@ -10,6 +10,7 @@ import UserRegistration from "../components/User/Register/Register";
 import UserLogin from "../components/User/Login/Login";
 import UserProfile from "../components/User/UserProfile/UserProfile";
 import Deposit from "../components/User/UserDeposit/Deposit";
+import AdminDeposit from "../components/Admin/AdminDeposit/AdminDeposit";
 
 export const router = createBrowserRouter([
   {
@@ -57,6 +58,14 @@ export const router = createBrowserRouter([
         element: (
           <AdminProtectedRoute>
             <AdminEmailPasswordChange />
+          </AdminProtectedRoute>
+        ),
+      },
+      {
+        path: "AdminDeposit",
+        element: (
+          <AdminProtectedRoute>
+            <AdminDeposit />
           </AdminProtectedRoute>
         ),
       },
