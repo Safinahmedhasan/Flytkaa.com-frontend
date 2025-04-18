@@ -101,7 +101,7 @@ const Sidebar = () => {
   const menuItems = [
     { path: "dashboard", icon: Home, label: "Dashboard" },
     { path: "AdminDeposit", icon: Activity, label: "AdminDeposit" },
-    { path: "customers", icon: Users, label: "Customers" },
+    { path: "AdminWithdrawal", icon: Users, label: "AdminWithdrawal" },
     { path: "finance", icon: DollarSign, label: "Finance" },
     { path: "AdminEmailPasswordChange", icon: UserCog, label: "Admin Settings" },
     { path: "settings", icon: Settings, label: "Settings" },

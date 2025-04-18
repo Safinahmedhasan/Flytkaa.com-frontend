@@ -11,6 +11,8 @@ import UserLogin from "../components/User/Login/Login";
 import UserProfile from "../components/User/UserProfile/UserProfile";
 import Deposit from "../components/User/UserDeposit/Deposit";
 import AdminDeposit from "../components/Admin/AdminDeposit/AdminDeposit";
+import AdminWithdrawal from "../components/Admin/AdminWithdrawal/AdminWithdrawal";
+import Withdraw from "../components/User/Withdraw/Withdraw";
 
 export const router = createBrowserRouter([
   {
@@ -28,6 +30,10 @@ export const router = createBrowserRouter([
       {
         path: "/Deposit",
         element: <Deposit />,
+      },
+      {
+        path: "/Withdraw",
+        element: <Withdraw />,
       },
     ],
   },
@@ -66,6 +72,14 @@ export const router = createBrowserRouter([
         element: (
           <AdminProtectedRoute>
             <AdminDeposit />
+          </AdminProtectedRoute>
+        ),
+      },
+      {
+        path: "AdminWithdrawal",
+        element: (
+          <AdminProtectedRoute>
+            <AdminWithdrawal />
           </AdminProtectedRoute>
         ),
       },
