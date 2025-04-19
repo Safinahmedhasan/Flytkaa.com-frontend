@@ -13,6 +13,8 @@ import Deposit from "../components/User/UserDeposit/Deposit";
 import AdminDeposit from "../components/Admin/AdminDeposit/AdminDeposit";
 import AdminWithdrawal from "../components/Admin/AdminWithdrawal/AdminWithdrawal";
 import Withdraw from "../components/User/Withdraw/Withdraw";
+import BettingSystem from "../components/User/BettingSystem/BettingSystem";
+import AdminBettingDashboard from "../components/Admin/AdminBettingDashboard/AdminBettingDashboard";
 
 export const router = createBrowserRouter([
   {
@@ -34,6 +36,10 @@ export const router = createBrowserRouter([
       {
         path: "/Withdraw",
         element: <Withdraw />,
+      },
+      {
+        path: "/BettingSystem",
+        element: <BettingSystem />,
       },
     ],
   },
@@ -72,6 +78,14 @@ export const router = createBrowserRouter([
         element: (
           <AdminProtectedRoute>
             <AdminDeposit />
+          </AdminProtectedRoute>
+        ),
+      },
+      {
+        path: "AdminBettingDashboard",
+        element: (
+          <AdminProtectedRoute>
+            <AdminBettingDashboard />
           </AdminProtectedRoute>
         ),
       },

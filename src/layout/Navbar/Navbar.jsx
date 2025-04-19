@@ -95,7 +95,7 @@ const Navbar = () => {
     {
       name: "Trading",
       dropdown: [
-        { name: "Trading", href: "/trading/spot" },
+        { name: "Trading", href: "/BettingSystem" },
         { name: "Futures", href: "/trading/futures" },
 
       ],

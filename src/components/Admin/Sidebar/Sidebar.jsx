@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from "react";
 import { NavLink, useNavigate, useLocation } from "react-router-dom";
 import {
@@ -102,7 +103,7 @@ const Sidebar = () => {
     { path: "dashboard", icon: Home, label: "Dashboard" },
     { path: "AdminDeposit", icon: Activity, label: "AdminDeposit" },
     { path: "AdminWithdrawal", icon: Users, label: "AdminWithdrawal" },
-    { path: "finance", icon: DollarSign, label: "Finance" },
+    { path: "AdminBettingDashboard", icon: DollarSign, label: "AdminBettingDashboard" },
     { path: "AdminEmailPasswordChange", icon: UserCog, label: "Admin Settings" },
     { path: "settings", icon: Settings, label: "Settings" },
   ];
