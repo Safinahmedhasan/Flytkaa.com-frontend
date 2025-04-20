@@ -1,5 +1,3 @@
-// THis is my user betting component
-
 import { useState, useEffect, useRef } from "react";
 import {
   DollarSign,
@@ -12,25 +10,49 @@ import {
   RefreshCw,
   List,
   ChevronRight,
-  X,
   ChevronUp,
   ChevronDown,
-  Award,
   Info,
-  ArrowRight,
   Wallet,
-  Activity,
+  Repeat,
+  Globe,
 } from "lucide-react";
 import { Link } from "react-router-dom";
 import ApexChart from "../../../layout/ApexChart/ApexChart";
 
+// Currency conversion functions - These will now use dynamic rate
+// We'll get the actual rate from the API
+let USD_TO_BDT_RATE = 122; // Default rate
+
+const usdToBDT = (amount) => amount * USD_TO_BDT_RATE;
+const bdtToUSD = (amount) => amount / USD_TO_BDT_RATE;
+
+// Get multiplier color class
+const getMultiplierColorClass = (multiplier) => {
+  if (multiplier >= 3) return "text-green-400";
+  if (multiplier >= 2) return "text-blue-400";
+  if (multiplier >= 1.5) return "text-yellow-400";
+  return "text-red-400";
+};
+
 const BettingSystem = () => {
+  // API URL
+  const API_URL = import.meta.env.VITE_DataHost || "http://localhost:5000";
+
+  // States for currency rate and loading
+  const [currencyRateLoading, setCurrencyRateLoading] = useState(true);
+  const [currencyRateError, setCurrencyRateError] = useState(null);
+  const [exchangeRateLastUpdated, setExchangeRateLastUpdated] = useState(null);
+
   // User data and betting state
   const [userData, setUserData] = useState({
     fullName: "",
     username: "",
     balance: 0,
   });
+
+  // Currency selection state
+  const [selectedCurrency, setSelectedCurrency] = useState("USD");
 
   // Betting state
   const [betAmount, setBetAmount] = useState("");
@@ -56,17 +78,65 @@ const BettingSystem = () => {
 
   // Refs
   const gameGraphRef = useRef(null);
+  // Part 2: Utility Functions and API Calls
+  // Format date
+  const formatDate = (date) => {
+    if (!date) return "Unknown";
+    return new Intl.DateTimeFormat("en-US", {
+      year: "numeric",
+      month: "short",
+      day: "numeric",
+      hour: "2-digit",
+      minute: "2-digit",
+    }).format(new Date(date));
+  };
 
-  // Constants
-  const API_URL = import.meta.env.VITE_DataHost || "http://localhost:5000";
-  // Format currency
-  const formatCurrency = (amount) => {
-    return new Intl.NumberFormat("en-US", {
-      style: "currency",
-      currency: "USD",
-      minimumFractionDigits: 2,
-      maximumFractionDigits: 2,
-    }).format(amount);
+  // Fetch exchange rate from API
+  const fetchExchangeRate = async () => {
+    try {
+      setCurrencyRateLoading(true);
+      const response = await fetch(`${API_URL}/currency-rate`);
+
+      if (!response.ok) {
+        throw new Error("Failed to fetch exchange rate");
+      }
+
+      const data = await response.json();
+      USD_TO_BDT_RATE = data.exchangeRate;
+      setExchangeRateLastUpdated(data.lastUpdated);
+
+      console.log(`Exchange rate loaded: 1 USD = ${USD_TO_BDT_RATE} BDT`);
+      setCurrencyRateError(null);
+    } catch (error) {
+      console.error("Error fetching exchange rate:", error);
+      setCurrencyRateError("Could not load exchange rate. Using default rate.");
+      // Keep using the default rate
+    } finally {
+      setCurrencyRateLoading(false);
+    }
+  };
+
+  // Format currency based on selected currency
+  const formatCurrency = (amount, forceCurrency = null) => {
+    const currency = forceCurrency || selectedCurrency;
+
+    if (currency === "BDT") {
+      const bdtAmount = selectedCurrency === "USD" ? usdToBDT(amount) : amount;
+      return new Intl.NumberFormat("bn-BD", {
+        style: "currency",
+        currency: "BDT",
+        minimumFractionDigits: 2,
+        maximumFractionDigits: 2,
+      }).format(bdtAmount);
+    } else {
+      const usdAmount = selectedCurrency === "BDT" ? bdtToUSD(amount) : amount;
+      return new Intl.NumberFormat("en-US", {
+        style: "currency",
+        currency: "USD",
+        minimumFractionDigits: 2,
+        maximumFractionDigits: 2,
+      }).format(usdAmount);
+    }
   };
 
   // Format date with time
@@ -81,40 +151,23 @@ const BettingSystem = () => {
     });
   };
 
-  // Initialize component
-  useEffect(() => {
-    setIsVisible(true);
-    fetchUserData();
-    fetchBetHistory();
-    fetchRecentGames();
+  // Toggle currency
+  const toggleCurrency = () => {
+    setSelectedCurrency((prev) => (prev === "USD" ? "BDT" : "USD"));
 
-    // Clear alerts after 5 seconds
-    if (error || success) {
-      const timer = setTimeout(() => {
-        setError(null);
-        setSuccess(null);
-      }, 5000);
-
-      return () => clearTimeout(timer);
-    }
-  }, [error, success]);
-
-  // Calculate potential win whenever bet amount or multiplier changes
-  useEffect(() => {
+    // Convert bet amount if needed
     if (betAmount && !isNaN(betAmount) && parseFloat(betAmount) > 0) {
-      setPotentialWin(parseFloat(betAmount) * parseFloat(multiplier));
-    } else {
-      setPotentialWin(0);
+      const numericAmount = parseFloat(betAmount);
+      if (selectedCurrency === "USD") {
+        // Convert USD to BDT
+        setBetAmount(usdToBDT(numericAmount).toFixed(2));
+      } else {
+        // Convert BDT to USD
+        setBetAmount(bdtToUSD(numericAmount).toFixed(2));
+      }
     }
-  }, [betAmount, multiplier]);
-
-  // Get multiplier color class
-  const getMultiplierColorClass = (multiplier) => {
-    if (multiplier >= 3) return "text-green-400";
-    if (multiplier >= 2) return "text-blue-400";
-    if (multiplier >= 1.5) return "text-yellow-400";
-    return "text-red-400";
   };
+
   // Fetch user profile to get balance
   const fetchUserData = async () => {
     try {
@@ -170,13 +223,13 @@ const BettingSystem = () => {
       });
 
       if (!response.ok) {
-        throw new Error("Failed to fetch bet history");
+        throw new Error("Failed to fetch Trade history");
       }
 
       const data = await response.json();
       setBetHistory(data.bets || []);
     } catch (error) {
-      console.error("Error fetching bet history:", error);
+      console.error("Error fetching Trade history:", error);
     }
   };
 
@@ -195,6 +248,40 @@ const BettingSystem = () => {
       console.error("Error fetching recent games:", error);
     }
   };
+  // Part 3: Game Logic and Effect Hooks
+  // Initialize component - First fetch exchange rate, then user data
+  useEffect(() => {
+    setIsVisible(true);
+
+    const initialize = async () => {
+      await fetchExchangeRate();
+      await fetchUserData();
+      await fetchBetHistory();
+      await fetchRecentGames();
+    };
+
+    initialize();
+
+    // Clear alerts after 5 seconds
+    if (error || success) {
+      const timer = setTimeout(() => {
+        setError(null);
+        setSuccess(null);
+      }, 5000);
+
+      return () => clearTimeout(timer);
+    }
+  }, [error, success]);
+
+  // Calculate potential win whenever bet amount or multiplier changes
+  useEffect(() => {
+    if (betAmount && !isNaN(betAmount) && parseFloat(betAmount) > 0) {
+      setPotentialWin(parseFloat(betAmount) * parseFloat(multiplier));
+    } else {
+      setPotentialWin(0);
+    }
+  }, [betAmount, multiplier]);
+
   // Handle bet amount input
   const handleBetAmountChange = (e) => {
     const value = e.target.value;
@@ -256,17 +343,24 @@ const BettingSystem = () => {
       if (timerId) clearInterval(timerId);
     };
   };
+
   // Place bet and process game result
   const handlePlaceBet = async (e) => {
     e.preventDefault();
 
     if (!betAmount || parseFloat(betAmount) <= 0) {
-      setError("Please enter a valid bet amount");
+      setError("Please enter a valid Trade amount");
       return;
     }
 
+    // Convert amount to USD if we're in BDT mode
+    const betAmountUSD =
+      selectedCurrency === "BDT"
+        ? bdtToUSD(parseFloat(betAmount))
+        : parseFloat(betAmount);
+
     // Check if user has enough balance
-    if (parseFloat(betAmount) > userData.balance) {
+    if (betAmountUSD > userData.balance) {
       setError("Insufficient balance");
       return;
     }
@@ -284,14 +378,14 @@ const BettingSystem = () => {
           "Content-Type": "application/json",
         },
         body: JSON.stringify({
-          amount: parseFloat(betAmount),
+          amount: betAmountUSD, // Always send USD to backend
           multiplier: parseFloat(multiplier),
         }),
       });
 
       if (!response.ok) {
         const errorData = await response.json();
-        throw new Error(errorData.message || "Failed to place bet");
+        throw new Error(errorData.message || "Failed to place Trade");
       }
 
       const data = await response.json();
@@ -311,7 +405,12 @@ const BettingSystem = () => {
 
         // Show success/failure message
         if (data.bet.won) {
-          setSuccess(`You won ${data.bet.actualWinning.toFixed(2)}!`);
+          const winningAmount =
+            selectedCurrency === "BDT"
+              ? usdToBDT(data.bet.actualWinning).toFixed(2)
+              : data.bet.actualWinning.toFixed(2);
+          const currencySymbol = selectedCurrency === "BDT" ? "৳" : "$";
+          setSuccess(`You won ${currencySymbol}${winningAmount}!`);
         } else {
           setError("Better luck next time!");
         }
@@ -321,14 +420,15 @@ const BettingSystem = () => {
         fetchRecentGames();
       }, (data.gameResult.multiplierResult - 1.0) * 2000 + 500); // Delay based on multiplier
     } catch (error) {
-      console.error("Error placing bet:", error);
-      setError(error.message || "Failed to place bet");
+      console.error("Error placing Trade:", error);
+      setError(error.message || "Failed to place Trade");
       setIsRunningGame(false);
       setCrashed(false);
     } finally {
       setIsPlacingBet(false);
     }
   };
+  // Part 4: Render Function
   return (
     <div className="min-h-screen bg-gradient-to-b from-gray-900 to-black text-white py-16 px-4 sm:px-6 pt-32">
       <div className="max-w-6xl mx-auto">
@@ -340,11 +440,49 @@ const BettingSystem = () => {
         >
           <h1 className="text-3xl font-bold flex items-center">
             <DollarSign className="mr-3 text-blue-400 h-7 w-7" />
-            <span>Betting System</span>
+            <span>Trading System</span>
           </h1>
           <p className="text-gray-400 mt-2">
-            Place your bets and multiply your winnings
+            Place your Trades and multiply your winnings
           </p>
+
+          {/* Currency Toggle Button */}
+          <button
+            onClick={toggleCurrency}
+            className="mt-4 flex items-center py-2 px-4 bg-gray-800 rounded-lg hover:bg-gray-700 transition-colors"
+          >
+            <Globe className="w-4 h-4 mr-2 text-blue-400" />
+            <span className="mr-2">Currency:</span>
+            <span className="font-bold">
+              {selectedCurrency === "USD" ? "USD ($)" : "BDT (৳)"}
+            </span>
+            <Repeat className="w-4 h-4 ml-2 text-blue-400" />
+          </button>
+
+          {/* Exchange Rate Info */}
+          {/* <div className="mt-2 text-xs text-gray-400 flex items-center">
+            {currencyRateLoading ? (
+              <>
+                <RefreshCw className="w-3 h-3 mr-1 animate-spin" />
+                Loading exchange rate...
+              </>
+            ) : currencyRateError ? (
+              <>
+                <AlertCircle className="w-3 h-3 mr-1 text-yellow-400" />
+                {currencyRateError}
+              </>
+            ) : (
+              <>
+                <Info className="w-3 h-3 mr-1" />
+                Exchange rate: 1 USD = {USD_TO_BDT_RATE} BDT
+                {exchangeRateLastUpdated && (
+                  <span className="ml-1">
+                    (Updated: {formatDate(exchangeRateLastUpdated)})
+                  </span>
+                )}
+              </>
+            )}
+          </div> */}
         </div>
 
         {/* Alert Messages */}
@@ -388,16 +526,26 @@ const BettingSystem = () => {
               </div>
 
               <div className="p-6">
-                <div className="flex items-center justify-between">
-                  <div>
-                    <p className="text-gray-400 text-sm">Available Balance</p>
-                    <p className="text-2xl font-bold text-white">
-                      {formatCurrency(userData.balance)}
+                <div className="flex flex-col">
+                  <div className="flex items-center justify-between mb-2">
+                    <p className="text-gray-400 text-sm">
+                      Available Balance (USD)
+                    </p>
+                    <p className="text-xl font-bold text-white">
+                      {formatCurrency(userData.balance, "USD")}
+                    </p>
+                  </div>
+                  <div className="flex items-center justify-between">
+                    <p className="text-gray-400 text-sm">
+                      Available Balance (BDT)
+                    </p>
+                    <p className="text-xl font-bold text-white">
+                      {formatCurrency(userData.balance, "BDT")}
                     </p>
                   </div>
                   <Link
                     to="/deposit"
-                    className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-500 transition-colors text-sm"
+                    className="mt-4 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-500 transition-colors text-sm text-center"
                   >
                     Deposit
                   </Link>
@@ -410,7 +558,8 @@ const BettingSystem = () => {
               <div className="p-6 border-b border-gray-700">
                 <h3 className="text-lg font-semibold flex items-center">
                   <TrendingUp className="w-5 h-5 text-blue-400 mr-2" />
-                  Place Your Bet
+                  Place Your Trade in{" "}
+                  {selectedCurrency === "USD" ? "USD ($)" : "BDT (৳)"}
                 </h3>
               </div>
 
@@ -418,11 +567,15 @@ const BettingSystem = () => {
                 {/* Bet Amount */}
                 <div className="mb-4">
                   <label className="block text-sm font-medium text-gray-300 mb-2">
-                    Bet Amount
+                    Bet Amount ({selectedCurrency})
                   </label>
                   <div className="flex">
                     <div className="bg-gray-700 flex items-center px-3 rounded-l-lg border-r border-gray-600">
-                      <DollarSign className="h-5 w-5 text-gray-400" />
+                      {selectedCurrency === "USD" ? (
+                        <DollarSign className="h-5 w-5 text-gray-400" />
+                      ) : (
+                        <span className="text-gray-400 font-medium">৳</span>
+                      )}
                     </div>
                     <input
                       type="text"
@@ -435,41 +588,81 @@ const BettingSystem = () => {
                   </div>
                 </div>
 
-                {/* Quick Amounts */}
+                {/* Quick Amounts - adjusted based on currency */}
                 <div className="grid grid-cols-4 gap-2 mb-6">
-                  <button
-                    type="button"
-                    onClick={() => handleQuickAmount(10)}
-                    className="bg-gray-700 hover:bg-gray-600 text-sm py-2 rounded-md transition-colors"
-                    disabled={isPlacingBet || isRunningGame}
-                  >
-                    $10
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => handleQuickAmount(50)}
-                    className="bg-gray-700 hover:bg-gray-600 text-sm py-2 rounded-md transition-colors"
-                    disabled={isPlacingBet || isRunningGame}
-                  >
-                    $50
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => handleQuickAmount(100)}
-                    className="bg-gray-700 hover:bg-gray-600 text-sm py-2 rounded-md transition-colors"
-                    disabled={isPlacingBet || isRunningGame}
-                  >
-                    $100
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => handleQuickAmount(500)}
-                    className="bg-gray-700 hover:bg-gray-600 text-sm py-2 rounded-md transition-colors"
-                    disabled={isPlacingBet || isRunningGame}
-                  >
-                    $500
-                  </button>
+                  {selectedCurrency === "USD" ? (
+                    <>
+                      <button
+                        type="button"
+                        onClick={() => handleQuickAmount(10)}
+                        className="bg-gray-700 hover:bg-gray-600 text-sm py-2 rounded-md transition-colors"
+                        disabled={isPlacingBet || isRunningGame}
+                      >
+                        $10
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => handleQuickAmount(50)}
+                        className="bg-gray-700 hover:bg-gray-600 text-sm py-2 rounded-md transition-colors"
+                        disabled={isPlacingBet || isRunningGame}
+                      >
+                        $50
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => handleQuickAmount(100)}
+                        className="bg-gray-700 hover:bg-gray-600 text-sm py-2 rounded-md transition-colors"
+                        disabled={isPlacingBet || isRunningGame}
+                      >
+                        $100
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => handleQuickAmount(500)}
+                        className="bg-gray-700 hover:bg-gray-600 text-sm py-2 rounded-md transition-colors"
+                        disabled={isPlacingBet || isRunningGame}
+                      >
+                        $500
+                      </button>
+                    </>
+                  ) : (
+                    <>
+                      <button
+                        type="button"
+                        onClick={() => handleQuickAmount(1000)}
+                        className="bg-gray-700 hover:bg-gray-600 text-sm py-2 rounded-md transition-colors"
+                        disabled={isPlacingBet || isRunningGame}
+                      >
+                        ৳1000
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => handleQuickAmount(5000)}
+                        className="bg-gray-700 hover:bg-gray-600 text-sm py-2 rounded-md transition-colors"
+                        disabled={isPlacingBet || isRunningGame}
+                      >
+                        ৳5000
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => handleQuickAmount(10000)}
+                        className="bg-gray-700 hover:bg-gray-600 text-sm py-2 rounded-md transition-colors"
+                        disabled={isPlacingBet || isRunningGame}
+                      >
+                        ৳10000
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => handleQuickAmount(50000)}
+                        className="bg-gray-700 hover:bg-gray-600 text-sm py-2 rounded-md transition-colors"
+                        disabled={isPlacingBet || isRunningGame}
+                      >
+                        ৳50000
+                      </button>
+                    </>
+                  )}
                 </div>
+
                 {/* Multiplier Selection */}
                 <div className="mb-4">
                   <label className="block text-sm font-medium text-gray-300 mb-2">
@@ -540,13 +733,17 @@ const BettingSystem = () => {
                   </button>
                 </div>
 
-                {/* Potential Win */}
+                {/* Potential Win - Show in both currencies */}
                 <div className="mb-6 p-3 bg-gray-700/50 rounded-lg">
-                  <div className="flex justify-between items-center">
-                    <span className="text-gray-300">Potential Win:</span>
-                    <span className="text-xl font-bold text-green-400">
-                      {formatCurrency(potentialWin)}
-                    </span>
+                  <div className="flex flex-col">
+                    <div className="flex justify-between items-center mb-2">
+                      <span className="text-gray-300">
+                        Potential Win (USD):
+                      </span>
+                      <span className="text-lg font-bold text-green-400">
+                        {formatCurrency(potentialWin, "BDT")}
+                      </span>
+                    </div>
                   </div>
                 </div>
 
@@ -567,12 +764,13 @@ const BettingSystem = () => {
                       Processing...
                     </>
                   ) : (
-                    "Place Bet"
+                    `Place Trade (${selectedCurrency})`
                   )}
                 </button>
               </form>
             </div>
           </div>
+
           {/* Middle & Right Columns - Game Display & History */}
           <div
             className={`lg:col-span-2 transition-all duration-1000 delay-300 transform ${
@@ -628,47 +826,7 @@ const BettingSystem = () => {
                 </div>
 
                 {/* Game visualization */}
-                {/* <div
-                  ref={gameGraphRef}
-                  className="w-full h-48 bg-gray-900/50 rounded-lg border border-gray-700 flex items-center justify-center mb-4"
-                >
-                  {isRunningGame ? (
-                    <div className="text-center">
-                      <div className="text-6xl font-bold text-yellow-400 animate-pulse">
-                        {currentMultiplier.toFixed(2)}x
-                      </div>
-                      <p className="text-gray-400 mt-2">Game in progress...</p>
-                    </div>
-                  ) : gameResult ? (
-                    <div className="text-center">
-                      <div
-                        className={`text-6xl font-bold ${getMultiplierColorClass(
-                          gameResult.gameResult.multiplierResult
-                        )}`}
-                      >
-                        {gameResult.gameResult.multiplierResult.toFixed(2)}x
-                      </div>
-                      <p
-                        className={`text-xl mt-2 ${
-                          gameResult.bet.won ? "text-green-400" : "text-red-400"
-                        }`}
-                      >
-                        {gameResult.bet.won
-                          ? `You won ${formatCurrency(
-                              gameResult.bet.actualWinning
-                            )}!`
-                          : "Better luck next time!"}
-                      </p>
-                    </div>
-                  ) : (
-                    <div className="text-center text-gray-400">
-                      <p>Place a bet to start the game</p>
-                      <p className="text-sm mt-2">Win up to 5x your bet!</p>
-                    </div>
-                  )}
-                </div> */}
-
-                <ApexChart/>
+                <ApexChart />
 
                 {/* Game result details */}
                 {gameResult && !isRunningGame && (
@@ -681,9 +839,15 @@ const BettingSystem = () => {
                   >
                     <div className="grid grid-cols-2 gap-4">
                       <div>
-                        <p className="text-gray-400 text-sm">Your Bet</p>
+                        <p className="text-gray-400 text-sm">Your Trade (USD)</p>
                         <p className="font-semibold">
-                          {formatCurrency(gameResult.bet.amount)}
+                          {formatCurrency(gameResult.bet.amount, "USD")}
+                        </p>
+                      </div>
+                      <div>
+                        <p className="text-gray-400 text-sm">Your Trade (BDT)</p>
+                        <p className="font-semibold">
+                          {formatCurrency(gameResult.bet.amount, "BDT")}
                         </p>
                       </div>
                       <div>
@@ -708,7 +872,9 @@ const BettingSystem = () => {
                       </div>
                       <div>
                         <p className="text-gray-400 text-sm">
-                          {gameResult.bet.won ? "Amount Won" : "Potential Win"}
+                          {gameResult.bet.won
+                            ? "Amount Won (USD)"
+                            : "Potential Win (USD)"}
                         </p>
                         <p
                           className={`font-semibold ${
@@ -717,7 +883,29 @@ const BettingSystem = () => {
                               : "text-gray-400"
                           }`}
                         >
-                          {formatCurrency(gameResult.bet.potentialWinning)}
+                          {formatCurrency(
+                            gameResult.bet.potentialWinning,
+                            "USD"
+                          )}
+                        </p>
+                      </div>
+                      <div>
+                        <p className="text-gray-400 text-sm">
+                          {gameResult.bet.won
+                            ? "Amount Won (BDT)"
+                            : "Potential Win (BDT)"}
+                        </p>
+                        <p
+                          className={`font-semibold ${
+                            gameResult.bet.won
+                              ? "text-green-400"
+                              : "text-gray-400"
+                          }`}
+                        >
+                          {formatCurrency(
+                            gameResult.bet.potentialWinning,
+                            "BDT"
+                          )}
                         </p>
                       </div>
                     </div>
@@ -725,6 +913,7 @@ const BettingSystem = () => {
                 )}
               </div>
             </div>
+
             {/* Recent Games Card */}
             <div className="bg-gray-800/50 backdrop-blur-sm border border-gray-700 rounded-xl overflow-hidden shadow-xl mb-6">
               <div className="p-6 border-b border-gray-700 flex justify-between items-center">
@@ -769,12 +958,13 @@ const BettingSystem = () => {
                 </div>
               </div>
             </div>
+
             {/* Bet History Card */}
-            <div className="bg-gray-800/50 backdrop-blur-sm border border-gray-700 rounded-xl overflow-hidden shadow-xl">
+            <div className="bg-gray-800/50 backdrop-blur-sm border border-gray-700 rounded-xl overflow-hidden shadow-xl mb-6">
               <div className="p-6 border-b border-gray-700 flex justify-between items-center">
                 <h3 className="text-lg font-semibold flex items-center">
                   <List className="w-5 h-5 text-blue-400 mr-2" />
-                  Your Bet History
+                  Your Trade History
                 </h3>
                 <button
                   onClick={() => setBetHistoryExpanded(!betHistoryExpanded)}
@@ -818,8 +1008,13 @@ const BettingSystem = () => {
                             </div>
                             <div>
                               <h4 className="font-medium flex items-center">
-                                {formatCurrency(bet.amount)} at{" "}
-                                {bet.multiplier.toFixed(2)}x
+                                <span className="mr-1">
+                                  {selectedCurrency === "USD" ? "$" : "৳"}
+                                </span>
+                                {selectedCurrency === "USD"
+                                  ? bet.amount.toFixed(2)
+                                  : usdToBDT(bet.amount).toFixed(2)}{" "}
+                                at {bet.multiplier.toFixed(2)}x
                                 {bet.won && (
                                   <span className="ml-2 px-2 py-0.5 bg-green-900/30 text-green-400 text-xs rounded-full">
                                     Won
@@ -840,9 +1035,42 @@ const BettingSystem = () => {
                                 bet.won ? "text-green-400" : "text-red-400"
                               }`}
                             >
-                              {bet.won
-                                ? `+${formatCurrency(bet.actualWinning)}`
-                                : `-${formatCurrency(bet.amount)}`}
+                              {bet.won ? (
+                                <>
+                                  +{selectedCurrency === "USD" ? "$" : "৳"}
+                                  {selectedCurrency === "USD"
+                                    ? bet.actualWinning.toFixed(2)
+                                    : usdToBDT(bet.actualWinning).toFixed(2)}
+                                </>
+                              ) : (
+                                <>
+                                  -{selectedCurrency === "USD" ? "$" : "৳"}
+                                  {selectedCurrency === "USD"
+                                    ? bet.amount.toFixed(2)
+                                    : usdToBDT(bet.amount).toFixed(2)}
+                                </>
+                              )}
+                            </p>
+                            <p className="text-xs text-gray-400 mt-1">
+                              {selectedCurrency === "USD" ? (
+                                <>
+                                  (
+                                  {formatCurrency(
+                                    bet.won ? bet.actualWinning : bet.amount,
+                                    "BDT"
+                                  )}
+                                  )
+                                </>
+                              ) : (
+                                <>
+                                  (
+                                  {formatCurrency(
+                                    bet.won ? bet.actualWinning : bet.amount,
+                                    "USD"
+                                  )}
+                                  )
+                                </>
+                              )}
                             </p>
                           </div>
                         </div>
@@ -850,9 +1078,9 @@ const BettingSystem = () => {
                     ))
                 ) : (
                   <div className="p-6 text-center text-gray-400">
-                    <p>No betting history yet</p>
+                    <p>No Trading history yet</p>
                     <p className="text-sm mt-2">
-                      Place your first bet to get started!
+                      Place your first Trade to get started!
                     </p>
                   </div>
                 )}
@@ -870,8 +1098,87 @@ const BettingSystem = () => {
                 </div>
               )}
             </div>
+
+            {/* Currency Exchange Info Card */}
+            <div className="bg-gray-800/50 backdrop-blur-sm border border-gray-700 rounded-xl overflow-hidden shadow-xl mb-6">
+              <div className="p-6 border-b border-gray-700">
+                <h3 className="text-lg font-semibold flex items-center">
+                  <Repeat className="w-5 h-5 text-blue-400 mr-2" />
+                  Currency Exchange Information
+                </h3>
+              </div>
+
+              <div className="p-6">
+                <div className="flex items-center justify-between mb-4">
+                  <div>
+                    <p className="text-gray-400 text-sm">
+                      Current Exchange Rate
+                    </p>
+                    <p className="text-xl font-bold text-white">
+                      1 USD = {USD_TO_BDT_RATE} BDT
+                    </p>
+                  </div>
+                  <button
+                    onClick={fetchExchangeRate}
+                    className={`px-4 py-2 bg-blue-600 hover:bg-blue-500 text-white rounded-lg transition-colors flex items-center text-sm ${
+                      currencyRateLoading ? "opacity-50 cursor-not-allowed" : ""
+                    }`}
+                    disabled={currencyRateLoading}
+                  >
+                    <RefreshCw
+                      className={`w-4 h-4 mr-2 ${
+                        currencyRateLoading ? "animate-spin" : ""
+                      }`}
+                    />
+                    Refresh Rate
+                  </button>
+                </div>
+
+                <div className="bg-gray-700/50 rounded-lg p-4">
+                  <div className="mb-3">
+                    <p className="font-medium text-white mb-2">
+                      Currency Conversion Examples:
+                    </p>
+                    <div className="grid grid-cols-2 gap-4">
+                      <div>
+                        <p className="text-sm text-gray-300">$10 USD</p>
+                        <p className="text-sm text-green-400">
+                          = ৳{(10 * USD_TO_BDT_RATE).toLocaleString()} BDT
+                        </p>
+                      </div>
+                      <div>
+                        <p className="text-sm text-gray-300">$50 USD</p>
+                        <p className="text-sm text-green-400">
+                          = ৳{(50 * USD_TO_BDT_RATE).toLocaleString()} BDT
+                        </p>
+                      </div>
+                      <div>
+                        <p className="text-sm text-gray-300">$100 USD</p>
+                        <p className="text-sm text-green-400">
+                          = ৳{(100 * USD_TO_BDT_RATE).toLocaleString()} BDT
+                        </p>
+                      </div>
+                      <div>
+                        <p className="text-sm text-gray-300">$500 USD</p>
+                        <p className="text-sm text-green-400">
+                          = ৳{(500 * USD_TO_BDT_RATE).toLocaleString()} BDT
+                        </p>
+                      </div>
+                    </div>
+                  </div>
+
+                  <p className="text-xs text-gray-400">
+                    Note: Exchange rates are managed by administrators and may
+                    be updated periodically. All Trade are processed in USD
+                    internally. When Trading in BDT, your amount will be
+                    converted automatically using the current exchange rate.
+                  </p>
+                </div>
+              </div>
+            </div>
+
             {/* How To Play Card */}
-            <div className="mt-6 bg-gray-800/50 backdrop-blur-sm border border-gray-700 rounded-xl overflow-hidden shadow-xl">
+            <div className="bg-gray-800/50 backdrop-blur-sm border border-gray-700 rounded-xl overflow-hidden shadow-xl">
               <div className="p-6 border-b border-gray-700">
                 <h3 className="text-lg font-semibold flex items-center">
                   <Info className="w-5 h-5 text-blue-400 mr-2" />
@@ -888,10 +1195,9 @@ const BettingSystem = () => {
                       </span>
                     </div>
                     <div>
-                      <h4 className="font-medium">Enter Bet Amount</h4>
+                      <h4 className="font-medium">Select Your Currency</h4>
                       <p className="text-sm text-gray-400 mt-1">
-                        Choose how much you want to bet. Make sure you have
-                        enough balance.
+                        Choose between USD and BDT for placing your Trade.
                       </p>
                     </div>
                   </div>
@@ -900,6 +1206,21 @@ const BettingSystem = () => {
                     <div className="bg-blue-900/30 rounded-full p-2 mr-4 flex-shrink-0">
                       <span className="w-6 h-6 flex items-center justify-center text-blue-400 font-bold">
                         2
+                      </span>
+                    </div>
+                    <div>
+                      <h4 className="font-medium">Enter Trade Amount</h4>
+                      <p className="text-sm text-gray-400 mt-1">
+                        Choose how much you want to Trade in your selected
+                        currency. Make sure you have enough balance.
+                      </p>
+                    </div>
+                  </div>
+
+                  <div className="flex">
+                    <div className="bg-blue-900/30 rounded-full p-2 mr-4 flex-shrink-0">
+                      <span className="w-6 h-6 flex items-center justify-center text-blue-400 font-bold">
+                        3
                       </span>
                     </div>
                     <div>
@@ -914,13 +1235,13 @@ const BettingSystem = () => {
                   <div className="flex">
                     <div className="bg-blue-900/30 rounded-full p-2 mr-4 flex-shrink-0">
                       <span className="w-6 h-6 flex items-center justify-center text-blue-400 font-bold">
-                        3
+                        4
                       </span>
                     </div>
                     <div>
-                      <h4 className="font-medium">Place Your Bet</h4>
+                      <h4 className="font-medium">Place Your Trade</h4>
                       <p className="text-sm text-gray-400 mt-1">
-                        Click the "Place Bet" button and watch the multiplier
+                        Click the "Place Trade" button and watch the multiplier
                         increase!
                       </p>
                     </div>
@@ -929,7 +1250,7 @@ const BettingSystem = () => {
                   <div className="flex">
                     <div className="bg-blue-900/30 rounded-full p-2 mr-4 flex-shrink-0">
                       <span className="w-6 h-6 flex items-center justify-center text-blue-400 font-bold">
-                        4
+                        5
                       </span>
                     </div>
                     <div>
@@ -937,7 +1258,8 @@ const BettingSystem = () => {
                       <p className="text-sm text-gray-400 mt-1">
                         If the result multiplier is equal to or higher than your
                         target, you win! Your winnings will be automatically
-                        added to your balance.
+                        added to your balance in USD and converted to BDT if
+                        you're using BDT.
                       </p>
                     </div>
                   </div>

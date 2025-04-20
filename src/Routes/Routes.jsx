@@ -15,6 +15,11 @@ import AdminWithdrawal from "../components/Admin/AdminWithdrawal/AdminWithdrawal
 import Withdraw from "../components/User/Withdraw/Withdraw";
 import BettingSystem from "../components/User/BettingSystem/BettingSystem";
 import AdminBettingDashboard from "../components/Admin/AdminBettingDashboard/AdminBettingDashboard";
+import CurrencySetting from "../components/Admin/CurrencySetting/CurrencySetting";
+import AdminNotifications from "../components/Admin/AdminNotifications/AdminNotifications";
+import ErrorPage from "../ErrorPage/ErrorPage";
+import AdminHelpline from "../components/Admin/AdminHelpLine/AdminHelpLine";
+import Helpline from "../components/User/HelpLine/HelpLine";
 
 export const router = createBrowserRouter([
   {
@@ -40,6 +45,10 @@ export const router = createBrowserRouter([
       {
         path: "/BettingSystem",
         element: <BettingSystem />,
+      },
+      {
+        path: "/Helpline",
+        element: <Helpline />,
       },
     ],
   },
@@ -90,10 +99,34 @@ export const router = createBrowserRouter([
         ),
       },
       {
+        path: "CurrencySetting",
+        element: (
+          <AdminProtectedRoute>
+            <CurrencySetting />
+          </AdminProtectedRoute>
+        ),
+      },
+      {
+        path: "AdminNotifications ",
+        element: (
+          <AdminProtectedRoute>
+            <AdminNotifications />
+          </AdminProtectedRoute>
+        ),
+      },
+      {
         path: "AdminWithdrawal",
         element: (
           <AdminProtectedRoute>
             <AdminWithdrawal />
+          </AdminProtectedRoute>
+        ),
+      },
+      {
+        path: "AdminHelpline",
+        element: (
+          <AdminProtectedRoute>
+            <AdminHelpline />
           </AdminProtectedRoute>
         ),
       },
@@ -106,5 +139,9 @@ export const router = createBrowserRouter([
   {
     path: "Register",
     element: <UserRegistration />,
+  },
+  {
+    path: "/*",
+    element: <ErrorPage/>,
   },
 ]);

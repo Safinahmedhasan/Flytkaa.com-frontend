@@ -103,9 +103,11 @@ const Sidebar = () => {
     { path: "dashboard", icon: Home, label: "Dashboard" },
     { path: "AdminDeposit", icon: Activity, label: "AdminDeposit" },
     { path: "AdminWithdrawal", icon: Users, label: "AdminWithdrawal" },
-    { path: "AdminBettingDashboard", icon: DollarSign, label: "AdminBettingDashboard" },
+    { path: "AdminBettingDashboard", icon: DollarSign, label: "Betting Setting" },
+    { path: "CurrencySetting", icon: DollarSign, label: "Currency Setting" },
     { path: "AdminEmailPasswordChange", icon: UserCog, label: "Admin Settings" },
-    { path: "settings", icon: Settings, label: "Settings" },
+    { path: "AdminNotifications ", icon: UserCog, label: "Admin Notifications " },
+    { path: "AdminHelpline", icon: Settings, label: "AdminHelpline" },
   ];
 
   // Group menu items
