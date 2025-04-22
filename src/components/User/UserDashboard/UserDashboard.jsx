@@ -19,6 +19,8 @@ import {
   Clock,
 } from "lucide-react";
 import NotificationMarquee from "../NotificationMarquee/NotificationMarquee";
+import PartnersDisplay from "../PartnersDisplay/PartnersDisplay";
+import TestimonialsDisplay from "../TestimonialsDisplay/TestimonialsDisplay";
 
 const UserDashboard = () => {
   const navigate = useNavigate();
@@ -30,7 +32,7 @@ const UserDashboard = () => {
   const [recentBets, setRecentBets] = useState([]);
 
   // API URL from environment variables
-  const API_URL = import.meta.env.VITE_DataHost || "http://localhost:5000";
+  const API_URL = import.meta.env.VITE_DataHost;
 
   useEffect(() => {
     const fetchUserData = async () => {
@@ -705,6 +707,10 @@ const UserDashboard = () => {
           </div>
         </div>
       </div>
+
+      <TestimonialsDisplay />
+
+      <PartnersDisplay />
 
       {/* Bottom Indicator */}
       <div className="fixed bottom-0 left-0 right-0 bg-gray-800 border-t border-gray-700 py-2 flex justify-center">

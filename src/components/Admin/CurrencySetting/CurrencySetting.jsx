@@ -18,7 +18,7 @@ const CurrencySetting = () => {
   const [lastUpdated, setLastUpdated] = useState(null);
 
   // API URL
-  const API_URL = import.meta.env.VITE_DataHost || "http://localhost:5000";
+  const API_URL = import.meta.env.VITE_DataHost 
 
   // Fetch current exchange rate when component mounts
   useEffect(() => {

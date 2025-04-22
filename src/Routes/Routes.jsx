@@ -20,6 +20,9 @@ import AdminNotifications from "../components/Admin/AdminNotifications/AdminNoti
 import ErrorPage from "../ErrorPage/ErrorPage";
 import AdminHelpline from "../components/Admin/AdminHelpLine/AdminHelpLine";
 import Helpline from "../components/User/HelpLine/HelpLine";
+import AdminPartnersManagement from "../components/Admin/AdminPartnersManagement/AdminPartnersManagement";
+import PartnersDisplay from "../components/User/PartnersDisplay/PartnersDisplay";
+import AdminTestimonialsManagement from "../components/Admin/AdminTestimonialsManagement/AdminTestimonialsManagement";
 
 export const router = createBrowserRouter([
   {
@@ -50,6 +53,10 @@ export const router = createBrowserRouter([
         path: "/Helpline",
         element: <Helpline />,
       },
+      {
+        path: "/PartnersDisplay",
+        element: <PartnersDisplay />,
+      },
     ],
   },
   // Admin Login Page
@@ -79,6 +86,14 @@ export const router = createBrowserRouter([
         element: (
           <AdminProtectedRoute>
             <AdminEmailPasswordChange />
+          </AdminProtectedRoute>
+        ),
+      },
+      {
+        path: "AdminPartnersManagement",
+        element: (
+          <AdminProtectedRoute>
+            <AdminPartnersManagement />
           </AdminProtectedRoute>
         ),
       },
@@ -119,6 +134,14 @@ export const router = createBrowserRouter([
         element: (
           <AdminProtectedRoute>
             <AdminWithdrawal />
+          </AdminProtectedRoute>
+        ),
+      },
+      {
+        path: "AdminTestimonialsManagement ",
+        element: (
+          <AdminProtectedRoute>
+            <AdminTestimonialsManagement />
           </AdminProtectedRoute>
         ),
       },

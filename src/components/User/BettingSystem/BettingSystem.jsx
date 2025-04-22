@@ -37,7 +37,7 @@ const getMultiplierColorClass = (multiplier) => {
 
 const BettingSystem = () => {
   // API URL
-  const API_URL = import.meta.env.VITE_DataHost || "http://localhost:5000";
+  const API_URL = import.meta.env.VITE_DataHost 
 
   // States for currency rate and loading
   const [currencyRateLoading, setCurrencyRateLoading] = useState(true);

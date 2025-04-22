@@ -43,7 +43,7 @@ const AdminHelpline = () => {
   });
 
   // API URL
-  const API_URL = import.meta.env.VITE_DataHost || "http://localhost:5000";
+  const API_URL = import.meta.env.VITE_DataHost 
 
   // Available social media/contact types with their icons
   const contactTypes = [

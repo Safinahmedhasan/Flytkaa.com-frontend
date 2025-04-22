@@ -48,7 +48,7 @@ const AdminDeposit = () => {
     pages: 0,
   });
 
-  const API_URL = import.meta.env.VITE_DataHost || "http://localhost:5000";
+  const API_URL = import.meta.env.VITE_DataHost 
 
   // Status styling configurations
   const statusColors = {

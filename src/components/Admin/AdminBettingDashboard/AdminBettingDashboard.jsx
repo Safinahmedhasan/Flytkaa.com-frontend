@@ -101,7 +101,7 @@ const AdminBettingDashboard = () => {
   });
 
   // Constants
-  const API_URL = import.meta.env.VITE_DataHost || "http://localhost:5000";
+  const API_URL = import.meta.env.VITE_DataHost
   // Format currency
   const formatCurrency = (amount) => {
     return new Intl.NumberFormat("en-US", {

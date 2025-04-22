@@ -108,6 +108,8 @@ const Sidebar = () => {
     { path: "AdminEmailPasswordChange", icon: UserCog, label: "Admin Settings" },
     { path: "AdminNotifications ", icon: UserCog, label: "Admin Notifications " },
     { path: "AdminHelpline", icon: Settings, label: "AdminHelpline" },
+    { path: "AdminPartnersManagement", icon: Settings, label: "Partners Management" },
+    { path: "AdminTestimonialsManagement ", icon: Settings, label: "Testimonials Management " },
   ];
 
   // Group menu items

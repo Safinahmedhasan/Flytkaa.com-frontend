@@ -122,7 +122,7 @@ const UserProfile = () => {
         return;
       }
       
-      const API_URL = import.meta.env.VITE_DataHost || 'http://localhost:5000';
+      const API_URL = import.meta.env.VITE_DataHost 
       
       const response = await fetch(`${API_URL}/user/profile`, {
         headers: {
@@ -247,7 +247,7 @@ const UserProfile = () => {
     try {
       // In a real implementation, this would be an API call
       const token = localStorage.getItem('userToken');
-      const API_URL = import.meta.env.VITE_DataHost || 'http://localhost:5000';
+      const API_URL = import.meta.env.VITE_DataHost 
       
       const updateData = {
         fullName: editFormData.fullName
@@ -336,7 +336,7 @@ const UserProfile = () => {
     
     try {
       const token = localStorage.getItem('userToken');
-      const API_URL = import.meta.env.VITE_DataHost || 'http://localhost:5000';
+      const API_URL = import.meta.env.VITE_DataHost
       
       const formData = new FormData();
       formData.append('profilePhoto', selectedFile);

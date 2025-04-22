@@ -29,7 +29,7 @@ const Helpline = () => {
   const [copiedContact, setCopiedContact] = useState(null);
 
   // API URL
-  const API_URL = import.meta.env.VITE_DataHost || "http://localhost:5000";
+  const API_URL = import.meta.env.VITE_DataHost 
 
   // Map string icon names to actual Lucide icon components
   const iconMap = {
