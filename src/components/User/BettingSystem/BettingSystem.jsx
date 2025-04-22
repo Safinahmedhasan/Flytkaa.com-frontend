@@ -19,6 +19,7 @@ import {
 } from "lucide-react";
 import { Link } from "react-router-dom";
 import ApexChart from "../../../layout/ApexChart/ApexChart";
+import Trading from "../Trading/Trading";
 
 // Currency conversion functions - These will now use dynamic rate
 // We'll get the actual rate from the API
@@ -826,7 +827,8 @@ const BettingSystem = () => {
                 </div>
 
                 {/* Game visualization */}
-                <ApexChart />
+                {/* <ApexChart /> */}
+                <Trading/>
 
                 {/* Game result details */}
                 {gameResult && !isRunningGame && (

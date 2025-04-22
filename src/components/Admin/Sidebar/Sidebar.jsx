@@ -102,13 +102,14 @@ const Sidebar = () => {
   const menuItems = [
     { path: "dashboard", icon: Home, label: "Dashboard" },
     { path: "AdminUsersManagement", icon: Home, label: "Users Management" },
-    { path: "AdminDeposit", icon: Activity, label: "AdminDeposit" },
-    { path: "AdminWithdrawal", icon: Users, label: "AdminWithdrawal" },
+    { path: "AdminDeposit", icon: Activity, label: "Users Deposit" },
+    { path: "AdminWithdrawal", icon: Users, label: "Users Withdrawal" },
+    { path: "AdminPaymentMethod", icon: Users, label: "Payment Method" },
     { path: "AdminBettingDashboard", icon: DollarSign, label: "Betting Setting" },
     { path: "CurrencySetting", icon: DollarSign, label: "Currency Setting" },
     { path: "AdminEmailPasswordChange", icon: UserCog, label: "Admin Settings" },
-    { path: "AdminNotifications ", icon: UserCog, label: "Admin Notifications " },
-    { path: "AdminHelpline", icon: Settings, label: "AdminHelpline" },
+    { path: "AdminNotifications ", icon: UserCog, label: "Users Notifications " },
+    { path: "AdminHelpline", icon: Settings, label: "Helpline" },
     { path: "AdminPartnersManagement", icon: Settings, label: "Partners Management" },
     { path: "AdminTestimonialsManagement ", icon: Settings, label: "Testimonials Management " },
   ];
@@ -342,13 +343,13 @@ const Sidebar = () => {
 
             {/* Admin Menu */}
             <div className="px-3 mt-4">
-              <h6
+              {/* <h6
                 className={`text-xs uppercase text-gray-500 font-semibold mb-1 ${
                   isCollapsed ? "text-center" : "px-3"
                 } sticky top-0 bg-gray-900 py-2 z-10`}
               >
                 {!isCollapsed ? "Admin" : "•••"}
-              </h6>
+              </h6> */}
               <nav className="space-y-1">
                 {secondaryItems.map((item) => (
                   <MenuItem key={item.path} item={item} />

@@ -12,7 +12,10 @@ import {
   Search,
   Filter,
   Wallet,
-  X
+  X,
+  Copy,
+  Info,
+  ExternalLink
 } from 'lucide-react';
 
 const Deposit = () => {
@@ -40,16 +43,13 @@ const Deposit = () => {
     pages: 0
   });
   
-  const API_URL = import.meta.env.VITE_DataHost;
+  // New state for payment methods
+  const [paymentMethods, setPaymentMethods] = useState([]);
+  const [selectedPaymentMethod, setSelectedPaymentMethod] = useState(null);
+  const [copiedText, setCopiedText] = useState('');
+  const [copiedTimeout, setCopiedTimeout] = useState(null);
   
-  // Payment method options based on backend validation
-  const paymentMethods = [
-    "Bkash",
-    "Nagad",
-    "Rocket",
-    "Bank Transfer",
-    "Other"
-  ];
+  const API_URL = import.meta.env.VITE_DataHost;
   
   // Status colors for deposit requests
   const statusColors = {
@@ -73,8 +73,9 @@ const Deposit = () => {
     }
   };
   
-  // Fetch deposit requests history on component mount
+  // Fetch payment methods on component mount
   useEffect(() => {
+    fetchPaymentMethods();
     fetchDepositRequests();
   }, [statusFilter, pagination.page]);
   
@@ -89,6 +90,23 @@ const Deposit = () => {
       return () => clearTimeout(timer);
     }
   }, [error, success]);
+  
+  // Fetch payment methods from API
+  const fetchPaymentMethods = async () => {
+    try {
+      const response = await fetch(`${API_URL}/deposit-methods`);
+      
+      if (!response.ok) {
+        throw new Error('Failed to fetch payment methods');
+      }
+      
+      const data = await response.json();
+      setPaymentMethods(data.depositMethods || []);
+    } catch (error) {
+      console.error('Error fetching payment methods:', error);
+      setError('Failed to load payment methods. Please try again.');
+    }
+  };
   
   // Fetch deposit request history from API
   const fetchDepositRequests = async () => {
@@ -149,6 +167,12 @@ const Deposit = () => {
       ...prev,
       [name]: value
     }));
+    
+    // Update the selected payment method when the payment method changes
+    if (name === 'paymentMethod') {
+      const method = paymentMethods.find(m => m.value === value);
+      setSelectedPaymentMethod(method || null);
+    }
   };
   
   // Format date for display
@@ -160,6 +184,28 @@ const Deposit = () => {
       day: 'numeric',
       hour: '2-digit',
       minute: '2-digit'
+    });
+  };
+  
+  // Copy text to clipboard
+  const copyToClipboard = (text, type) => {
+    navigator.clipboard.writeText(text).then(() => {
+      // Clear any existing timeout
+      if (copiedTimeout) {
+        clearTimeout(copiedTimeout);
+      }
+      
+      // Set copied text type
+      setCopiedText(type);
+      
+      // Set a timeout to clear the copied text
+      const timeout = setTimeout(() => {
+        setCopiedText('');
+      }, 2000);
+      
+      setCopiedTimeout(timeout);
+    }).catch(err => {
+      console.error('Failed to copy:', err);
     });
   };
   
@@ -215,6 +261,9 @@ const Deposit = () => {
         transactionId: '',
         notes: ''
       });
+      
+      // Reset selected payment method
+      setSelectedPaymentMethod(null);
       
       // Refresh deposit history
       fetchDepositRequests();
@@ -281,6 +330,27 @@ const Deposit = () => {
     }
     
     return range;
+  };
+  
+  // Get payment method icon
+  const getPaymentMethodIcon = (methodName) => {
+    const name = methodName?.toLowerCase() || '';
+    if (name.includes('bkash')) return '💳 bKash';
+    if (name.includes('nagad')) return '💳 Nagad';
+    if (name.includes('rocket')) return '💳 Rocket';
+    if (name.includes('bank')) return '🏦 Bank';
+    return '💳 ' + methodName;
+  };
+  
+  // Format instructions text with line breaks
+  const formatInstructions = (text) => {
+    if (!text) return '';
+    return text.split('\n').map((line, i) => (
+      <React.Fragment key={i}>
+        {line}
+        {i < text.split('\n').length - 1 && <br />}
+      </React.Fragment>
+    ));
   };
   
   return (
@@ -356,6 +426,50 @@ const Deposit = () => {
                   </div>
                 )}
                 
+                {/* Payment Method Instructions */}
+                {selectedPaymentMethod && (
+                  <div className="mb-6 p-4 bg-indigo-900/30 border border-indigo-500/40 rounded-lg">
+                    <div className="flex items-start">
+                      <Info className="w-4 h-4 sm:w-5 sm:h-5 text-indigo-400 mt-0.5 mr-3 flex-shrink-0" />
+                      <div className="space-y-3 w-full">
+                        <div className="flex items-center justify-between">
+                          <h3 className="text-indigo-300 font-medium">
+                            {getPaymentMethodIcon(selectedPaymentMethod.label)} Payment Instructions
+                          </h3>
+                        </div>
+                        
+                        <div className="bg-gray-700/50 rounded p-3 flex items-center justify-between gap-2">
+                          <div className="flex-1">
+                            <p className="text-xs sm:text-sm text-gray-400 mb-1">Account Number:</p>
+                            <p className="text-white font-medium break-all">{selectedPaymentMethod.accountNumber}</p>
+                          </div>
+                          <button 
+                            onClick={() => copyToClipboard(selectedPaymentMethod.accountNumber, 'account')}
+                            className="px-2 py-1 bg-gray-700 hover:bg-gray-600 rounded text-sm text-gray-300 flex items-center"
+                            aria-label="Copy account number"
+                          >
+                            <Copy size={14} className="mr-1" />
+                            {copiedText === 'account' ? 'Copied!' : 'Copy'}
+                          </button>
+                        </div>
+                        
+                        {selectedPaymentMethod.instructions && (
+                          <div className="bg-gray-700/50 rounded p-3">
+                            <p className="text-xs sm:text-sm text-gray-400 mb-1">Instructions:</p>
+                            <p className="text-sm text-gray-200">
+                              {formatInstructions(selectedPaymentMethod.instructions)}
+                            </p>
+                          </div>
+                        )}
+                        
+                        <p className="text-xs text-indigo-300/70">
+                          Make your payment using the account number above, then complete the form below with your details.
+                        </p>
+                      </div>
+                    </div>
+                  </div>
+                )}
+                
                 <form onSubmit={handleSubmit} className="space-y-4 sm:space-y-6">
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4 sm:gap-6">
                     {/* Payment Method */}
@@ -373,7 +487,9 @@ const Deposit = () => {
                       >
                         <option value="">Select payment method</option>
                         {paymentMethods.map(method => (
-                          <option key={method} value={method}>{method}</option>
+                          <option key={method._id} value={method.value}>
+                            {method.label}
+                          </option>
                         ))}
                       </select>
                     </div>
@@ -430,7 +546,7 @@ const Deposit = () => {
                         name="transactionId"
                         value={formData.transactionId}
                         onChange={handleInputChange}
-                        placeholder="Optional transaction reference"
+                        placeholder="Enter transaction reference ID"
                         className="w-full px-3 sm:px-4 py-2 bg-gray-700 border border-gray-600 rounded-lg text-white focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-colors text-sm sm:text-base"
                       />
                     </div>
@@ -540,11 +656,8 @@ const Deposit = () => {
                       <tbody className="divide-y divide-gray-700">
                         {depositRequests.map((request) => (
                           <tr key={request._id} className="hover:bg-gray-700/30 transition-colors">
-                            <td className="px-3 sm:px-4 py-2 sm:py-3 text-xs sm:text-sm text-gray-300">
-                              {formatDate(request.createdAt)}
-                            </td>
                             <td className="px-3 sm:px-4 py-2 sm:py-3 text-xs sm:text-sm text-white">
-                              {request.paymentMethod}
+                              {getPaymentMethodIcon(request.paymentMethod)}
                             </td>
                             <td className="px-3 sm:px-4 py-2 sm:py-3 text-xs sm:text-sm font-medium text-white">
                               {request.amount.toFixed(2)}

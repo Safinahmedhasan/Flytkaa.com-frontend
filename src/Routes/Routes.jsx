@@ -24,6 +24,7 @@ import AdminPartnersManagement from "../components/Admin/AdminPartnersManagement
 import PartnersDisplay from "../components/User/PartnersDisplay/PartnersDisplay";
 import AdminTestimonialsManagement from "../components/Admin/AdminTestimonialsManagement/AdminTestimonialsManagement";
 import AdminUsersManagement from "../components/Admin/AdminUsersManagement/AdminUsersManagement";
+import AdminPaymentMethod from "../components/Admin/AdminPaymentMethod/AdminPaymentMethod";
 
 export const router = createBrowserRouter([
   {
@@ -87,6 +88,14 @@ export const router = createBrowserRouter([
         element: (
           <AdminProtectedRoute>
             <AdminUsersManagement />
+          </AdminProtectedRoute>
+        ),
+      },
+      {
+        path: "AdminPaymentMethod",
+        element: (
+          <AdminProtectedRoute>
+            <AdminPaymentMethod />
           </AdminProtectedRoute>
         ),
       },
