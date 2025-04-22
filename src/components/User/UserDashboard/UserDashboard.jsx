@@ -331,10 +331,10 @@ const UserDashboard = () => {
               </div>
             </div>
 
-            {/* <div className="flex items-center space-x-3">
-              <Link to="/profile" className="p-2 rounded-full bg-indigo-700 text-white hover:bg-indigo-600 transition-colors">
+            <div className="flex items-center space-x-3">
+              {/* <Link to="/profile" className="p-2 rounded-full bg-indigo-700 text-white hover:bg-indigo-600 transition-colors">
                 <User size={20} />
-              </Link>
+              </Link> */}
               <button 
                 onClick={() => {
                   localStorage.removeItem("userToken");
@@ -345,7 +345,7 @@ const UserDashboard = () => {
               >
                 <LogOut size={20} />
               </button>
-            </div> */}
+            </div>
           </div>
         </div>
       </header>

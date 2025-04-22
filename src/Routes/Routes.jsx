@@ -23,6 +23,7 @@ import Helpline from "../components/User/HelpLine/HelpLine";
 import AdminPartnersManagement from "../components/Admin/AdminPartnersManagement/AdminPartnersManagement";
 import PartnersDisplay from "../components/User/PartnersDisplay/PartnersDisplay";
 import AdminTestimonialsManagement from "../components/Admin/AdminTestimonialsManagement/AdminTestimonialsManagement";
+import AdminUsersManagement from "../components/Admin/AdminUsersManagement/AdminUsersManagement";
 
 export const router = createBrowserRouter([
   {
@@ -78,6 +79,14 @@ export const router = createBrowserRouter([
         element: (
           <AdminProtectedRoute>
             <Dashboard />
+          </AdminProtectedRoute>
+        ),
+      },
+      {
+        path: "AdminUsersManagement",
+        element: (
+          <AdminProtectedRoute>
+            <AdminUsersManagement />
           </AdminProtectedRoute>
         ),
       },

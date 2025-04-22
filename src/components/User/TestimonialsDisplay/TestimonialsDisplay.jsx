@@ -12,7 +12,7 @@ const TestimonialsDisplay = () => {
   const carouselRef = useRef(null);
   
   // API URL from environment variables
-  const API_URL = import.meta.env.VITE_DataHost || 'http://localhost:5000';
+  const API_URL = import.meta.env.VITE_DataHost;
   
   // Calculate number of visible testimonials based on screen size
   const getVisibleCount = () => {

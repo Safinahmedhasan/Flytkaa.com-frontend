@@ -9,6 +9,7 @@ import {
   EyeOff,
   UserPlus,
   ArrowRight,
+  Phone,
 } from "lucide-react";
 
 const UserRegistration = () => {
@@ -18,6 +19,7 @@ const UserRegistration = () => {
     password: "",
     confirmPassword: "",
     fullName: "",
+    phoneNumber: "", // Added phone number field
   });
 
   const [showPassword, setShowPassword] = useState(false);
@@ -46,6 +48,15 @@ const UserRegistration = () => {
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
     if (!emailRegex.test(formData.email)) {
       setError("Please enter a valid email address");
+      return false;
+    }
+
+    // Phone number validation
+    const phoneRegex = /^\+?[1-9]\d{1,14}$/;
+    if (!phoneRegex.test(formData.phoneNumber)) {
+      setError(
+        "Please enter a valid phone number with country code (e.g., +8801XXXXXXXXX)"
+      );
       return false;
     }
 
@@ -95,6 +106,7 @@ const UserRegistration = () => {
           email: formData.email,
           password: formData.password,
           fullName: formData.fullName,
+          phoneNumber: formData.phoneNumber, // Include phone number in request
         }),
       });
 
@@ -113,6 +125,7 @@ const UserRegistration = () => {
         password: "",
         confirmPassword: "",
         fullName: "",
+        phoneNumber: "",
       });
 
       // Redirect to login page after a delay
@@ -252,6 +265,30 @@ const UserRegistration = () => {
                     required
                   />
                 </div>
+              </div>
+
+              {/* Phone Number Field */}
+              <div className="relative group">
+                <label
+                  htmlFor="phoneNumber"
+                  className="block text-gray-300 text-sm font-medium mb-2 flex items-center"
+                >
+                  <Phone className="w-4 h-4 mr-2 text-indigo-400" />
+                  Phone Number
+                </label>
+                <div className="relative">
+                  <input
+                    type="tel"
+                    id="phoneNumber"
+                    name="phoneNumber"
+                    value={formData.phoneNumber}
+                    onChange={handleChange}
+                    className="w-full p-3 pl-4 bg-gray-700 border border-gray-600 text-white rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-all duration-200"
+                    placeholder="Enter phone number"
+                    required
+                  />
+                </div>
+                {/* <p className="mt-1 text-xs text-gray-400">Enter phone number</p> */}
               </div>
 
               {/* Password Field */}

@@ -101,6 +101,7 @@ const Sidebar = () => {
 
   const menuItems = [
     { path: "dashboard", icon: Home, label: "Dashboard" },
+    { path: "AdminUsersManagement", icon: Home, label: "Users Management" },
     { path: "AdminDeposit", icon: Activity, label: "AdminDeposit" },
     { path: "AdminWithdrawal", icon: Users, label: "AdminWithdrawal" },
     { path: "AdminBettingDashboard", icon: DollarSign, label: "Betting Setting" },

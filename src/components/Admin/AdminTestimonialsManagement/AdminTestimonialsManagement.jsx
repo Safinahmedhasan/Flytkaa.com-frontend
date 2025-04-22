@@ -42,7 +42,7 @@ const AdminTestimonialsManagement = () => {
   
   const fileInputRef = useRef(null);
   
-  const API_URL = import.meta.env.VITE_DataHost || 'http://localhost:5000';
+  const API_URL = import.meta.env.VITE_DataHost;
   
   // Fetch all testimonials
   const fetchTestimonials = async () => {
