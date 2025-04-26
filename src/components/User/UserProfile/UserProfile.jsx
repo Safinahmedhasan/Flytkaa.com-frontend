@@ -1,14 +1,14 @@
-import React, { useState, useEffect, useRef } from 'react';
-import { 
-  User, 
-  Edit, 
-  Mail, 
-  Phone, 
-  Shield, 
-  Activity, 
-  Clock, 
-  DollarSign, 
-  TrendingUp, 
+import React, { useState, useEffect, useRef } from "react";
+import {
+  User,
+  Edit,
+  Mail,
+  Phone,
+  Shield,
+  Activity,
+  Clock,
+  DollarSign,
+  TrendingUp,
   TrendingDown,
   Lock,
   Wallet,
@@ -19,82 +19,83 @@ import {
   ArrowRight,
   ChevronRight,
   BarChart4,
-  Camera
-} from 'lucide-react';
-import { Link } from 'react-router-dom';
+  Camera,
+} from "lucide-react";
+import { Link } from "react-router-dom";
+import ReferralDetails from "../ReferralDetails/ReferralDetails";
 
 const UserProfile = () => {
   // User Data State
   const [userData, setUserData] = useState({
-    fullName: 'Alex Johnson',
-    username: 'alexj',
-    email: 'alex.johnson@example.com',
-    phone: '+1 (555) 123-4567',
-    profilePhoto: '',
-    joinDate: '2023-09-15',
-    lastLogin: '2025-04-16T14:30:00',
-    status: 'active'
+    fullName: "Alex Johnson",
+    username: "alexj",
+    email: "alex.johnson@example.com",
+    phone: "+1 (555) 123-4567",
+    profilePhoto: "",
+    joinDate: "2023-09-15",
+    lastLogin: "2025-04-16T14:30:00",
+    status: "active",
   });
 
   // Financial Data State
   const [financialData, setFinancialData] = useState({
     balance: 10543.25,
-    totalDeposit: 15000.00,
-    totalWithdraw: 4500.00,
+    totalDeposit: 15000.0,
+    totalWithdraw: 4500.0,
     profitLoss: 43.25,
-    openPositions: 2
+    openPositions: 2,
   });
 
   // Recent activities
   const [recentActivities, setRecentActivities] = useState([
-    { 
-      type: 'deposit', 
-      amount: 1000, 
-      timestamp: '2025-04-16T10:45:00', 
-      status: 'completed', 
-      details: 'Deposit via Bank Transfer' 
+    {
+      type: "deposit",
+      amount: 1000,
+      timestamp: "2025-04-16T10:45:00",
+      status: "completed",
+      details: "Deposit via Bank Transfer",
     },
-    { 
-      type: 'trade', 
-      amount: 250, 
-      timestamp: '2025-04-15T15:30:00', 
-      status: 'completed', 
-      details: 'BTC/USD Buy Up', 
-      profit: 212.50 
+    {
+      type: "trade",
+      amount: 250,
+      timestamp: "2025-04-15T15:30:00",
+      status: "completed",
+      details: "BTC/USD Buy Up",
+      profit: 212.5,
     },
-    { 
-      type: 'withdraw', 
-      amount: 500, 
-      timestamp: '2025-04-13T12:20:00', 
-      status: 'pending', 
-      details: 'Withdrawal to Bank Account' 
+    {
+      type: "withdraw",
+      amount: 500,
+      timestamp: "2025-04-13T12:20:00",
+      status: "pending",
+      details: "Withdrawal to Bank Account",
     },
-    { 
-      type: 'trade', 
-      amount: 150, 
-      timestamp: '2025-04-12T09:15:00', 
-      status: 'completed', 
-      details: 'ETH/USD Buy Down', 
-      profit: -150 
+    {
+      type: "trade",
+      amount: 150,
+      timestamp: "2025-04-12T09:15:00",
+      status: "completed",
+      details: "ETH/USD Buy Down",
+      profit: -150,
     },
-    { 
-      type: 'deposit', 
-      amount: 2000, 
-      timestamp: '2025-04-10T11:05:00', 
-      status: 'completed', 
-      details: 'Deposit via Credit Card' 
-    }
+    {
+      type: "deposit",
+      amount: 2000,
+      timestamp: "2025-04-10T11:05:00",
+      status: "completed",
+      details: "Deposit via Credit Card",
+    },
   ]);
 
   // Edit Profile State
   const [editing, setEditing] = useState(false);
   const [editFormData, setEditFormData] = useState({
-    fullName: '',
-    email: '',
-    phone: '',
-    currentPassword: '',
-    newPassword: '',
-    confirmPassword: ''
+    fullName: "",
+    email: "",
+    phone: "",
+    currentPassword: "",
+    newPassword: "",
+    confirmPassword: "",
   });
 
   // Photo upload state
@@ -115,44 +116,44 @@ const UserProfile = () => {
     // In a real implementation, this would be an API call
     // For example:
     try {
-      const token = localStorage.getItem('userToken');
-      
+      const token = localStorage.getItem("userToken");
+
       if (!token) {
-        window.location.href = '/login';
+        window.location.href = "/login";
         return;
       }
-      
-      const API_URL = import.meta.env.VITE_DataHost 
-      
+
+      const API_URL = import.meta.env.VITE_DataHost;
+
       const response = await fetch(`${API_URL}/user/profile`, {
         headers: {
-          'Authorization': `Bearer ${token}`
-        }
+          Authorization: `Bearer ${token}`,
+        },
       });
-      
+
       if (response.status === 401 || response.status === 403) {
-        localStorage.removeItem('userToken');
-        localStorage.removeItem('userData');
-        window.location.href = '/login';
+        localStorage.removeItem("userToken");
+        localStorage.removeItem("userData");
+        window.location.href = "/login";
         return;
       }
-      
+
       if (!response.ok) {
-        throw new Error('Failed to fetch user data');
+        throw new Error("Failed to fetch user data");
       }
-      
+
       const data = await response.json();
-      
+
       // Update state with fetched data
       setUserData({
         fullName: data.fullName,
         username: data.username,
         email: data.email,
-        phone: data.phone || '',
-        profilePhoto: data.profilePhoto || '',
+        phone: data.phone || "",
+        profilePhoto: data.profilePhoto || "",
         joinDate: data.createdAt,
         lastLogin: data.lastLogin,
-        status: data.isActive ? 'active' : 'inactive'
+        status: data.isActive ? "active" : "inactive",
       });
 
       // Update financial data
@@ -161,21 +162,21 @@ const UserProfile = () => {
         totalDeposit: data.totalDeposit || 0,
         totalWithdraw: data.totalWithdraw || 0,
         profitLoss: data.Balance - data.totalDeposit + data.totalWithdraw,
-        openPositions: 0 // This would come from another endpoint
+        openPositions: 0, // This would come from another endpoint
       });
 
       // Set edit form initial values
       setEditFormData({
         fullName: data.fullName,
         email: data.email,
-        phone: data.phone || '',
-        currentPassword: '',
-        newPassword: '',
-        confirmPassword: ''
+        phone: data.phone || "",
+        currentPassword: "",
+        newPassword: "",
+        confirmPassword: "",
       });
     } catch (error) {
-      console.error('Error fetching user profile:', error);
-      setError('Failed to load user data');
+      console.error("Error fetching user profile:", error);
+      setError("Failed to load user data");
     }
   };
 
@@ -183,14 +184,14 @@ const UserProfile = () => {
     // Add animation delay for component appearance
     setIsVisible(true);
     fetchUserData();
-    
+
     // Clear alerts after 5 seconds
     if (error || success) {
       const timer = setTimeout(() => {
         setError(null);
         setSuccess(null);
       }, 5000);
-      
+
       return () => clearTimeout(timer);
     }
   }, [error, success]);
@@ -198,99 +199,101 @@ const UserProfile = () => {
   // Format date with time
   const formatDateTime = (dateString) => {
     const date = new Date(dateString);
-    return date.toLocaleDateString('en-US', {
-      year: 'numeric',
-      month: 'short',
-      day: 'numeric',
-      hour: '2-digit',
-      minute: '2-digit'
+    return date.toLocaleDateString("en-US", {
+      year: "numeric",
+      month: "short",
+      day: "numeric",
+      hour: "2-digit",
+      minute: "2-digit",
     });
   };
 
   // Format date only
   const formatDate = (dateString) => {
     const date = new Date(dateString);
-    return date.toLocaleDateString('en-US', {
-      year: 'numeric',
-      month: 'short',
-      day: 'numeric'
+    return date.toLocaleDateString("en-US", {
+      year: "numeric",
+      month: "short",
+      day: "numeric",
     });
   };
 
   // Format currency
   const formatCurrency = (amount) => {
-    return new Intl.NumberFormat('en-US', {
-      style: 'currency',
-      currency: 'USD'
+    return new Intl.NumberFormat("en-US", {
+      style: "currency",
+      currency: "USD",
     }).format(amount);
   };
 
   // Handle edit form input changes
   const handleInputChange = (e) => {
     const { name, value } = e.target;
-    setEditFormData(prev => ({
+    setEditFormData((prev) => ({
       ...prev,
-      [name]: value
+      [name]: value,
     }));
   };
 
   // Handle profile update
   const handleProfileUpdate = async (e) => {
     e.preventDefault();
-    
+
     // Validate passwords if user is trying to change it
-    if (editFormData.newPassword && editFormData.newPassword !== editFormData.confirmPassword) {
-      setError('New passwords do not match');
+    if (
+      editFormData.newPassword &&
+      editFormData.newPassword !== editFormData.confirmPassword
+    ) {
+      setError("New passwords do not match");
       return;
     }
-    
+
     try {
       // In a real implementation, this would be an API call
-      const token = localStorage.getItem('userToken');
-      const API_URL = import.meta.env.VITE_DataHost 
-      
+      const token = localStorage.getItem("userToken");
+      const API_URL = import.meta.env.VITE_DataHost;
+
       const updateData = {
-        fullName: editFormData.fullName
+        fullName: editFormData.fullName,
       };
-      
+
       // Only include password fields if the user is trying to change password
       if (editFormData.newPassword && editFormData.currentPassword) {
         updateData.currentPassword = editFormData.currentPassword;
         updateData.newPassword = editFormData.newPassword;
       }
-      
+
       const response = await fetch(`${API_URL}/user/profile`, {
-        method: 'PUT',
+        method: "PUT",
         headers: {
-          'Authorization': `Bearer ${token}`,
-          'Content-Type': 'application/json'
+          Authorization: `Bearer ${token}`,
+          "Content-Type": "application/json",
         },
-        body: JSON.stringify(updateData)
+        body: JSON.stringify(updateData),
       });
-      
+
       const data = await response.json();
-      
+
       if (!response.ok) {
-        throw new Error(data.message || 'Failed to update profile');
+        throw new Error(data.message || "Failed to update profile");
       }
-      
+
       // Update the user data with the updated info
-      setUserData(prev => ({
+      setUserData((prev) => ({
         ...prev,
-        fullName: editFormData.fullName
+        fullName: editFormData.fullName,
       }));
-      
-      setSuccess('Profile updated successfully');
+
+      setSuccess("Profile updated successfully");
       setEditing(false);
-      
+
       // Reset password fields
-      setEditFormData(prev => ({
+      setEditFormData((prev) => ({
         ...prev,
-        currentPassword: '',
-        newPassword: '',
-        confirmPassword: ''
+        currentPassword: "",
+        newPassword: "",
+        confirmPassword: "",
       }));
-      
     } catch (error) {
       setError(error.message);
     }
@@ -300,15 +303,19 @@ const UserProfile = () => {
   const handleFileChange = (e) => {
     const file = e.target.files[0];
     if (!file) return;
-    
+
     // Check file size (max 5MB)
     if (file.size > 5 * 1024 * 1024) {
       setError("File size should be less than 5MB");
       return;
     }
-    
+
     // Check file type
-    if (!file.type.match('image/jpeg') && !file.type.match('image/png') && !file.type.match('image/jpg')) {
+    if (
+      !file.type.match("image/jpeg") &&
+      !file.type.match("image/png") &&
+      !file.type.match("image/jpg")
+    ) {
       setError("Only JPEG, JPG and PNG files are allowed");
       return;
     }
@@ -333,40 +340,40 @@ const UserProfile = () => {
 
     setPhotoLoading(true);
     setError(null);
-    
+
     try {
-      const token = localStorage.getItem('userToken');
-      const API_URL = import.meta.env.VITE_DataHost
-      
+      const token = localStorage.getItem("userToken");
+      const API_URL = import.meta.env.VITE_DataHost;
+
       const formData = new FormData();
-      formData.append('profilePhoto', selectedFile);
+      formData.append("profilePhoto", selectedFile);
 
       const response = await fetch(`${API_URL}/user/update-profile-photo`, {
-        method: 'POST',
+        method: "POST",
         headers: {
-          'Authorization': `Bearer ${token}`
+          Authorization: `Bearer ${token}`,
         },
-        body: formData
+        body: formData,
       });
 
       const data = await response.json();
 
       if (!response.ok) {
-        throw new Error(data.message || 'Failed to upload photo');
+        throw new Error(data.message || "Failed to upload photo");
       }
 
       // Update profile photo in state
-      setUserData(prev => ({
+      setUserData((prev) => ({
         ...prev,
-        profilePhoto: data.profilePhoto
+        profilePhoto: data.profilePhoto,
       }));
 
-      setSuccess('Profile photo updated successfully');
+      setSuccess("Profile photo updated successfully");
       setPhotoPreview(null);
       setSelectedFile(null);
-      
+
       if (fileInputRef.current) {
-        fileInputRef.current.value = '';
+        fileInputRef.current.value = "";
       }
     } catch (error) {
       setError(error.message);
@@ -380,21 +387,23 @@ const UserProfile = () => {
     setPhotoPreview(null);
     setSelectedFile(null);
     if (fileInputRef.current) {
-      fileInputRef.current.value = '';
+      fileInputRef.current.value = "";
     }
   };
 
   // Get activity icon based on type
   const getActivityIcon = (activity) => {
     switch (activity.type) {
-      case 'deposit':
+      case "deposit":
         return <Wallet className="w-4 h-4 text-green-400" />;
-      case 'withdraw':
+      case "withdraw":
         return <Wallet className="w-4 h-4 text-red-400" />;
-      case 'trade':
-        return activity.profit >= 0 
-          ? <TrendingUp className="w-4 h-4 text-green-400" />
-          : <TrendingDown className="w-4 h-4 text-red-400" />;
+      case "trade":
+        return activity.profit >= 0 ? (
+          <TrendingUp className="w-4 h-4 text-green-400" />
+        ) : (
+          <TrendingDown className="w-4 h-4 text-red-400" />
+        );
       default:
         return <Activity className="w-4 h-4 text-blue-400" />;
     }
@@ -404,14 +413,20 @@ const UserProfile = () => {
     <div className="min-h-screen bg-gradient-to-b from-gray-900 to-black text-white py-16 px-4 sm:px-6 pt-32">
       <div className="max-w-6xl mx-auto">
         {/* Page Header */}
-        <div className={`mb-8 transition-all duration-1000 transform ${isVisible ? 'translate-y-0 opacity-100' : 'translate-y-10 opacity-0'}`}>
+        <div
+          className={`mb-8 transition-all duration-1000 transform ${
+            isVisible ? "translate-y-0 opacity-100" : "translate-y-10 opacity-0"
+          }`}
+        >
           <h1 className="text-3xl font-bold flex items-center">
             <User className="mr-3 text-blue-400 h-7 w-7" />
             <span>User Profile</span>
           </h1>
-          <p className="text-gray-400 mt-2">Manage your account settings and view trading history</p>
+          <p className="text-gray-400 mt-2">
+            Manage your account settings and view trading history
+          </p>
         </div>
-        
+
         {/* Alert Messages */}
         {error && (
           <div className="mb-6 p-4 bg-red-900/40 border border-red-500/40 text-white rounded-lg flex items-start">
@@ -422,7 +437,7 @@ const UserProfile = () => {
             </div>
           </div>
         )}
-        
+
         {success && (
           <div className="mb-6 p-4 bg-emerald-900/40 border border-emerald-500/40 text-white rounded-lg flex items-start">
             <CheckCircle className="w-5 h-5 text-emerald-400 mr-3 mt-0.5 flex-shrink-0" />
@@ -432,11 +447,17 @@ const UserProfile = () => {
             </div>
           </div>
         )}
-        
+
         {/* Main Content Grid */}
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
           {/* Left Column - User Info */}
-          <div className={`lg:col-span-1 transition-all duration-1000 delay-150 transform ${isVisible ? 'translate-y-0 opacity-100' : 'translate-y-10 opacity-0'}`}>
+          <div
+            className={`lg:col-span-1 transition-all duration-1000 delay-150 transform ${
+              isVisible
+                ? "translate-y-0 opacity-100"
+                : "translate-y-10 opacity-0"
+            }`}
+          >
             {/* Profile Card */}
             <div className="bg-gray-800/50 backdrop-blur-sm border border-gray-700 rounded-xl overflow-hidden shadow-xl mb-6">
               {/* Profile Banner */}
@@ -444,20 +465,20 @@ const UserProfile = () => {
                 <div className="absolute -bottom-12 left-6 rounded-full border-4 border-gray-800 overflow-hidden">
                   {photoPreview ? (
                     <div className="w-24 h-24 bg-gray-700 flex items-center justify-center relative">
-                      <img 
-                        src={photoPreview} 
-                        alt="Preview" 
+                      <img
+                        src={photoPreview}
+                        alt="Preview"
                         className="w-full h-full object-cover"
                       />
                     </div>
                   ) : userData.profilePhoto ? (
                     <div className="w-24 h-24 bg-gray-700 flex items-center justify-center relative">
-                      <img 
-                        src={userData.profilePhoto} 
-                        alt={userData.fullName} 
+                      <img
+                        src={userData.profilePhoto}
+                        alt={userData.fullName}
                         className="w-full h-full object-cover"
                       />
-                      <button 
+                      <button
                         onClick={() => fileInputRef.current.click()}
                         className="absolute inset-0 bg-black/50 opacity-0 hover:opacity-100 transition-opacity flex items-center justify-center"
                       >
@@ -469,7 +490,7 @@ const UserProfile = () => {
                       <span className="text-white text-3xl font-bold">
                         {userData.fullName.charAt(0)}
                       </span>
-                      <button 
+                      <button
                         onClick={() => fileInputRef.current.click()}
                         className="absolute inset-0 bg-black/50 opacity-0 hover:opacity-100 transition-opacity flex items-center justify-center"
                       >
@@ -477,7 +498,7 @@ const UserProfile = () => {
                       </button>
                     </div>
                   )}
-                  <input 
+                  <input
                     type="file"
                     ref={fileInputRef}
                     onChange={handleFileChange}
@@ -486,18 +507,24 @@ const UserProfile = () => {
                   />
                 </div>
                 <div className="absolute bottom-2 right-2">
-                  <div className={`px-2 py-1 rounded-full text-xs font-medium ${
-                    userData.status === 'active' ? 'bg-green-500/20 text-green-300' : 'bg-red-500/20 text-red-300'
-                  }`}>
-                    {userData.status === 'active' ? 'Active' : 'Inactive'}
+                  <div
+                    className={`px-2 py-1 rounded-full text-xs font-medium ${
+                      userData.status === "active"
+                        ? "bg-green-500/20 text-green-300"
+                        : "bg-red-500/20 text-red-300"
+                    }`}
+                  >
+                    {userData.status === "active" ? "Active" : "Inactive"}
                   </div>
                 </div>
               </div>
-              
+
               {/* Photo Upload Controls - Only shown when preview exists */}
               {photoPreview && (
                 <div className="pt-14 px-6 pb-4 border-b border-gray-700">
-                  <p className="text-sm text-gray-300 mb-3">Confirm your new profile photo:</p>
+                  <p className="text-sm text-gray-300 mb-3">
+                    Confirm your new profile photo:
+                  </p>
                   <div className="flex space-x-3">
                     <button
                       onClick={handlePhotoUpload}
@@ -526,12 +553,12 @@ const UserProfile = () => {
                   </div>
                 </div>
               )}
-              
+
               {/* User Info */}
               <div className="pt-14 px-6 pb-6">
                 <h2 className="text-xl font-bold">{userData.fullName}</h2>
                 <p className="text-blue-400">@{userData.username}</p>
-                
+
                 <div className="mt-6 space-y-3">
                   <div className="flex items-start">
                     <Mail className="w-5 h-5 text-gray-400 mr-3 mt-0.5" />
@@ -540,7 +567,7 @@ const UserProfile = () => {
                       <p>{userData.email}</p>
                     </div>
                   </div>
-                  
+
                   {userData.phone && (
                     <div className="flex items-start">
                       <Phone className="w-5 h-5 text-gray-400 mr-3 mt-0.5" />
@@ -550,7 +577,7 @@ const UserProfile = () => {
                       </div>
                     </div>
                   )}
-                  
+
                   <div className="flex items-start">
                     <Clock className="w-5 h-5 text-gray-400 mr-3 mt-0.5" />
                     <div>
@@ -558,7 +585,7 @@ const UserProfile = () => {
                       <p>{formatDate(userData.joinDate)}</p>
                     </div>
                   </div>
-                  
+
                   <div className="flex items-start">
                     <Activity className="w-5 h-5 text-gray-400 mr-3 mt-0.5" />
                     <div>
@@ -567,7 +594,7 @@ const UserProfile = () => {
                     </div>
                   </div>
                 </div>
-                
+
                 <div className="mt-6">
                   <button
                     onClick={() => setEditing(true)}
@@ -579,8 +606,8 @@ const UserProfile = () => {
                 </div>
               </div>
             </div>
-            
-            {/* Account Security Card */}
+
+            {/* Account Security Card
             <div className="bg-gray-800/50 backdrop-blur-sm border border-gray-700 rounded-xl overflow-hidden shadow-xl">
               <div className="p-6 border-b border-gray-700">
                 <h3 className="text-lg font-semibold flex items-center">
@@ -588,14 +615,16 @@ const UserProfile = () => {
                   Account Security
                 </h3>
               </div>
-              
+
               <div className="p-6">
                 <div className="flex items-center justify-between mb-4">
                   <div className="flex items-center">
                     <Lock className="w-5 h-5 text-gray-400 mr-3" />
                     <div>
                       <p>Password</p>
-                      <p className="text-sm text-gray-400">Last changed 30 days ago</p>
+                      <p className="text-sm text-gray-400">
+                        Last changed 30 days ago
+                      </p>
                     </div>
                   </div>
                   <button
@@ -605,7 +634,7 @@ const UserProfile = () => {
                     Change
                   </button>
                 </div>
-                
+
                 <div className="flex items-center justify-between">
                   <div className="flex items-center">
                     <Shield className="w-5 h-5 text-gray-400 mr-3" />
@@ -619,11 +648,20 @@ const UserProfile = () => {
                   </button>
                 </div>
               </div>
-            </div>
+            </div> */}
+
+            {/* Add Referral Details Component */}
+            <ReferralDetails />
           </div>
-          
+
           {/* Middle & Right Columns - Financial Info & Activity */}
-          <div className={`lg:col-span-2 transition-all duration-1000 delay-300 transform ${isVisible ? 'translate-y-0 opacity-100' : 'translate-y-10 opacity-0'}`}>
+          <div
+            className={`lg:col-span-2 transition-all duration-1000 delay-300 transform ${
+              isVisible
+                ? "translate-y-0 opacity-100"
+                : "translate-y-10 opacity-0"
+            }`}
+          >
             {/* Financial Data Widgets */}
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 mb-8">
               {/* Balance Widget */}
@@ -631,56 +669,71 @@ const UserProfile = () => {
                 <div className="flex justify-between items-start">
                   <div>
                     <p className="text-gray-400 text-sm">Account Balance</p>
-                    <h3 className="text-xl font-bold mt-1">{formatCurrency(financialData.balance)}</h3>
+                    <h3 className="text-xl font-bold mt-1">
+                      {formatCurrency(financialData.balance)}
+                    </h3>
                   </div>
                   <div className="bg-blue-500/20 p-3 rounded-lg">
                     <Wallet className="h-5 w-5 text-blue-400" />
                   </div>
                 </div>
                 <div className="mt-4">
-                  <Link to="/Deposit" className="inline-flex items-center text-blue-400 text-sm hover:text-blue-300">
+                  <Link
+                    to="/Deposit"
+                    className="inline-flex items-center text-blue-400 text-sm hover:text-blue-300"
+                  >
                     Deposit Funds <ArrowRight className="ml-1 h-3 w-3" />
                   </Link>
                 </div>
               </div>
-              
+
               {/* Total Deposit Widget */}
               <div className="bg-gradient-to-br from-green-600/20 to-green-800/20 backdrop-blur-sm border border-green-500/30 rounded-xl p-5 shadow-xl">
                 <div className="flex justify-between items-start">
                   <div>
                     <p className="text-gray-400 text-sm">Total Deposits</p>
-                    <h3 className="text-xl font-bold mt-1">{formatCurrency(financialData.totalDeposit)}</h3>
+                    <h3 className="text-xl font-bold mt-1">
+                      {formatCurrency(financialData.totalDeposit)}
+                    </h3>
                   </div>
                   <div className="bg-green-500/20 p-3 rounded-lg">
                     <TrendingUp className="h-5 w-5 text-green-400" />
                   </div>
                 </div>
                 <div className="mt-4">
-                  <Link to="/history" className="inline-flex items-center text-green-400 text-sm hover:text-green-300">
+                  <Link
+                    to="/history"
+                    className="inline-flex items-center text-green-400 text-sm hover:text-green-300"
+                  >
                     View History <ArrowRight className="ml-1 h-3 w-3" />
                   </Link>
                 </div>
               </div>
-              
+
               {/* Total Withdrawal Widget */}
               <div className="bg-gradient-to-br from-purple-600/20 to-purple-800/20 backdrop-blur-sm border border-purple-500/30 rounded-xl p-5 shadow-xl">
                 <div className="flex justify-between items-start">
                   <div>
                     <p className="text-gray-400 text-sm">Total Withdrawals</p>
-                    <h3 className="text-xl font-bold mt-1">{formatCurrency(financialData.totalWithdraw)}</h3>
+                    <h3 className="text-xl font-bold mt-1">
+                      {formatCurrency(financialData.totalWithdraw)}
+                    </h3>
                   </div>
                   <div className="bg-purple-500/20 p-3 rounded-lg">
                     <BarChart4 className="h-5 w-5 text-purple-400" />
                   </div>
                 </div>
                 <div className="mt-4">
-                  <Link to="/withdraw" className="inline-flex items-center text-purple-400 text-sm hover:text-purple-300">
+                  <Link
+                    to="/withdraw"
+                    className="inline-flex items-center text-purple-400 text-sm hover:text-purple-300"
+                  >
                     Withdraw Funds <ArrowRight className="ml-1 h-3 w-3" />
                   </Link>
                 </div>
               </div>
             </div>
-            
+
             {/* Recent Activity Card */}
             <div className="bg-gray-800/50 backdrop-blur-sm border border-gray-700 rounded-xl overflow-hidden shadow-xl mb-6">
               <div className="p-6 border-b border-gray-700 flex justify-between items-center">
@@ -688,14 +741,20 @@ const UserProfile = () => {
                   <Activity className="w-5 h-5 text-blue-400 mr-2" />
                   Recent Activity
                 </h3>
-                <Link to="/history" className="text-sm text-blue-400 hover:text-blue-300 flex items-center">
+                <Link
+                  to="/history"
+                  className="text-sm text-blue-400 hover:text-blue-300 flex items-center"
+                >
                   View All <ChevronRight className="w-4 h-4 ml-1" />
                 </Link>
               </div>
-              
+
               <div className="divide-y divide-gray-700">
                 {recentActivities.map((activity, index) => (
-                  <div key={index} className="p-6 hover:bg-gray-700/30 transition-colors">
+                  <div
+                    key={index}
+                    className="p-6 hover:bg-gray-700/30 transition-colors"
+                  >
                     <div className="flex justify-between items-start">
                       <div className="flex items-start">
                         <div className="rounded-full bg-gray-700 p-2 mr-4">
@@ -703,30 +762,46 @@ const UserProfile = () => {
                         </div>
                         <div>
                           <h4 className="font-medium">
-                            {activity.type === 'deposit' && 'Deposit'}
-                            {activity.type === 'withdraw' && 'Withdrawal'}
-                            {activity.type === 'trade' && 'Trade Position'}
+                            {activity.type === "deposit" && "Deposit"}
+                            {activity.type === "withdraw" && "Withdrawal"}
+                            {activity.type === "trade" && "Trade Position"}
                           </h4>
-                          <p className="text-sm text-gray-400 mt-1">{activity.details}</p>
-                          <p className="text-xs text-gray-500 mt-1">{formatDateTime(activity.timestamp)}</p>
+                          <p className="text-sm text-gray-400 mt-1">
+                            {activity.details}
+                          </p>
+                          <p className="text-xs text-gray-500 mt-1">
+                            {formatDateTime(activity.timestamp)}
+                          </p>
                         </div>
                       </div>
                       <div className="text-right">
                         <p className="font-medium">
-                          {activity.type === 'withdraw' && '-'}
+                          {activity.type === "withdraw" && "-"}
                           {formatCurrency(activity.amount)}
                         </p>
-                        {activity.type === 'trade' && (
-                          <p className={`text-sm ${activity.profit >= 0 ? 'text-green-400' : 'text-red-400'}`}>
-                            {activity.profit >= 0 ? '+' : ''}{formatCurrency(activity.profit)}
+                        {activity.type === "trade" && (
+                          <p
+                            className={`text-sm ${
+                              activity.profit >= 0
+                                ? "text-green-400"
+                                : "text-red-400"
+                            }`}
+                          >
+                            {activity.profit >= 0 ? "+" : ""}
+                            {formatCurrency(activity.profit)}
                           </p>
                         )}
-                        <div className={`mt-1 inline-block px-2 py-0.5 rounded-full text-xs font-medium ${
-                          activity.status === 'completed' ? 'bg-green-500/20 text-green-300' : 
-                          activity.status === 'pending' ? 'bg-yellow-500/20 text-yellow-300' : 
-                          'bg-red-500/20 text-red-300'
-                        }`}>
-                          {activity.status.charAt(0).toUpperCase() + activity.status.slice(1)}
+                        <div
+                          className={`mt-1 inline-block px-2 py-0.5 rounded-full text-xs font-medium ${
+                            activity.status === "completed"
+                              ? "bg-green-500/20 text-green-300"
+                              : activity.status === "pending"
+                              ? "bg-yellow-500/20 text-yellow-300"
+                              : "bg-red-500/20 text-red-300"
+                          }`}
+                        >
+                          {activity.status.charAt(0).toUpperCase() +
+                            activity.status.slice(1)}
                         </div>
                       </div>
                     </div>
@@ -737,7 +812,7 @@ const UserProfile = () => {
           </div>
         </div>
       </div>
-      
+
       {/* Edit Profile Modal */}
       {editing && (
         <div className="fixed inset-0 bg-black/70 flex items-center justify-center z-50 p-4">
@@ -754,12 +829,15 @@ const UserProfile = () => {
                 <X className="h-6 w-6" />
               </button>
             </div>
-            
+
             <div className="p-6">
               <form onSubmit={handleProfileUpdate}>
                 {/* Full Name */}
                 <div className="mb-4">
-                  <label htmlFor="fullName" className="block text-sm font-medium text-gray-300 mb-2">
+                  <label
+                    htmlFor="fullName"
+                    className="block text-sm font-medium text-gray-300 mb-2"
+                  >
                     Full Name
                   </label>
                   <input
@@ -772,10 +850,13 @@ const UserProfile = () => {
                     required
                   />
                 </div>
-                
+
                 {/* Email (Disabled - for display only) */}
                 <div className="mb-4">
-                  <label htmlFor="email" className="block text-sm font-medium text-gray-300 mb-2">
+                  <label
+                    htmlFor="email"
+                    className="block text-sm font-medium text-gray-300 mb-2"
+                  >
                     Email Address
                   </label>
                   <input
@@ -786,12 +867,17 @@ const UserProfile = () => {
                     className="w-full p-3 bg-gray-700/50 border border-gray-600 rounded-lg text-gray-400 cursor-not-allowed"
                     disabled
                   />
-                  <p className="mt-1 text-xs text-gray-400">Email cannot be changed. Contact support for assistance.</p>
+                  <p className="mt-1 text-xs text-gray-400">
+                    Email cannot be changed. Contact support for assistance.
+                  </p>
                 </div>
-                
+
                 {/* Phone Number */}
                 <div className="mb-6">
-                  <label htmlFor="phone" className="block text-sm font-medium text-gray-300 mb-2">
+                  <label
+                    htmlFor="phone"
+                    className="block text-sm font-medium text-gray-300 mb-2"
+                  >
                     Phone Number (Optional)
                   </label>
                   <input
@@ -803,18 +889,23 @@ const UserProfile = () => {
                     className="w-full p-3 bg-gray-700 border border-gray-600 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all"
                   />
                 </div>
-                
+
                 {/* Password Change Section */}
                 <div className="border-t border-gray-700 pt-6 mb-6">
                   <h4 className="text-lg font-medium mb-4 flex items-center">
                     <Lock className="w-4 h-4 mr-2 text-blue-400" />
                     Change Password
                   </h4>
-                  <p className="text-sm text-gray-400 mb-4">Leave password fields empty if you don't want to change it.</p>
-                  
+                  <p className="text-sm text-gray-400 mb-4">
+                    Leave password fields empty if you don't want to change it.
+                  </p>
+
                   {/* Current Password */}
                   <div className="mb-4">
-                    <label htmlFor="currentPassword" className="block text-sm font-medium text-gray-300 mb-2">
+                    <label
+                      htmlFor="currentPassword"
+                      className="block text-sm font-medium text-gray-300 mb-2"
+                    >
                       Current Password
                     </label>
                     <input
@@ -826,10 +917,13 @@ const UserProfile = () => {
                       className="w-full p-3 bg-gray-700 border border-gray-600 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all"
                     />
                   </div>
-                  
+
                   {/* New Password */}
                   <div className="mb-4">
-                    <label htmlFor="newPassword" className="block text-sm font-medium text-gray-300 mb-2">
+                    <label
+                      htmlFor="newPassword"
+                      className="block text-sm font-medium text-gray-300 mb-2"
+                    >
                       New Password
                     </label>
                     <input
@@ -841,12 +935,17 @@ const UserProfile = () => {
                       className="w-full p-3 bg-gray-700 border border-gray-600 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all"
                       minLength={8}
                     />
-                    <p className="mt-1 text-xs text-gray-400">Minimum 8 characters</p>
+                    <p className="mt-1 text-xs text-gray-400">
+                      Minimum 8 characters
+                    </p>
                   </div>
-                  
+
                   {/* Confirm Password */}
                   <div className="mb-4">
-                    <label htmlFor="confirmPassword" className="block text-sm font-medium text-gray-300 mb-2">
+                    <label
+                      htmlFor="confirmPassword"
+                      className="block text-sm font-medium text-gray-300 mb-2"
+                    >
                       Confirm New Password
                     </label>
                     <input
@@ -859,7 +958,7 @@ const UserProfile = () => {
                     />
                   </div>
                 </div>
-                
+
                 {/* Action Buttons */}
                 <div className="flex justify-end space-x-4">
                   <button

@@ -18,8 +18,9 @@ import {
   Globe,
 } from "lucide-react";
 import { Link } from "react-router-dom";
-import ApexChart from "../../../layout/ApexChart/ApexChart";
 import Trading from "../Trading/Trading";
+import InsufficientBalanceModal from "./InsufficientBalanceModal";
+import MinimumBetAmountModal from "./MinimumBetAmountModal";
 
 // Currency conversion functions - These will now use dynamic rate
 // We'll get the actual rate from the API
@@ -35,10 +36,17 @@ const getMultiplierColorClass = (multiplier) => {
   if (multiplier >= 1.5) return "text-yellow-400";
   return "text-red-400";
 };
-
 const BettingSystem = () => {
   // API URL
-  const API_URL = import.meta.env.VITE_DataHost 
+  const API_URL = import.meta.env.VITE_DataHost;
+
+  // System settings state
+  const [systemSettings, setSystemSettings] = useState({
+    winRate: 50,
+    minMultiplier: 1.0,
+    maxMultiplier: 5.0,
+    minBetAmount: 5.0, // Default minimum bet amount
+  });
 
   // States for currency rate and loading
   const [currencyRateLoading, setCurrencyRateLoading] = useState(true);
@@ -69,17 +77,24 @@ const BettingSystem = () => {
   const [currentMultiplier, setCurrentMultiplier] = useState(1.0);
   const [gameStartTime, setGameStartTime] = useState(null);
   const [crashed, setCrashed] = useState(false);
-  const [gameTimerId, setGameTimerId] = useState(null);
-
-  // UI states
+  const [gameTimerId, setGameTimerId] = useState(null); // UI states
   const [isVisible, setIsVisible] = useState(false);
   const [error, setError] = useState(null);
   const [success, setSuccess] = useState(null);
   const [betHistoryExpanded, setBetHistoryExpanded] = useState(false);
 
+  // Insufficient Balance Modal state
+  const [showInsufficientBalanceModal, setShowInsufficientBalanceModal] =
+    useState(false);
+  const [requiredAmount, setRequiredAmount] = useState(0);
+
+  // Minimum Bet Amount Modal state
+  const [showMinBetAmountModal, setShowMinBetAmountModal] = useState(false);
+  const [minBetAmountRequired, setMinBetAmountRequired] = useState(5.0);
+  const [currentBetAmount, setCurrentBetAmount] = useState(0);
+
   // Refs
   const gameGraphRef = useRef(null);
-  // Part 2: Utility Functions and API Calls
   // Format date
   const formatDate = (date) => {
     if (!date) return "Unknown";
@@ -117,6 +132,31 @@ const BettingSystem = () => {
     }
   };
 
+  // Fetch system settings
+  const fetchSystemSettings = async () => {
+    try {
+      const response = await fetch(`${API_URL}/admin/betting-settings`);
+
+      if (!response.ok) {
+        throw new Error("Failed to fetch system settings");
+      }
+
+      const data = await response.json();
+      setSystemSettings(data);
+
+      // Log the minimum bet amount
+      console.log(`Minimum bet amount: $${data.minBetAmount || 5.0}`);
+    } catch (error) {
+      console.error("Error fetching system settings:", error);
+      // Use default settings if fetch fails
+      setSystemSettings({
+        winRate: 50,
+        minMultiplier: 1.0,
+        maxMultiplier: 5.0,
+        minBetAmount: 5.0, // Default minimum bet amount
+      });
+    }
+  };
   // Format currency based on selected currency
   const formatCurrency = (amount, forceCurrency = null) => {
     const currency = forceCurrency || selectedCurrency;
@@ -169,6 +209,24 @@ const BettingSystem = () => {
     }
   };
 
+  // Helper method to display the minimum bet requirement in the betting form
+  const renderMinimumBetRequirement = () => {
+    if (!systemSettings.minBetAmount) return null;
+
+    const minBetInCurrentCurrency =
+      selectedCurrency === "USD"
+        ? systemSettings.minBetAmount
+        : usdToBDT(systemSettings.minBetAmount);
+
+    const currencySymbol = selectedCurrency === "USD" ? "$" : "৳";
+
+    return (
+      <p className="text-xs text-gray-400 mt-1">
+        Minimum bet: {currencySymbol}
+        {minBetInCurrentCurrency.toFixed(2)}
+      </p>
+    );
+  };
   // Fetch user profile to get balance
   const fetchUserData = async () => {
     try {
@@ -249,13 +307,13 @@ const BettingSystem = () => {
       console.error("Error fetching recent games:", error);
     }
   };
-  // Part 3: Game Logic and Effect Hooks
-  // Initialize component - First fetch exchange rate, then user data
+  // Initialize component - Fetch data on load
   useEffect(() => {
     setIsVisible(true);
 
     const initialize = async () => {
       await fetchExchangeRate();
+      await fetchSystemSettings(); // Fetch system settings
       await fetchUserData();
       await fetchBetHistory();
       await fetchRecentGames();
@@ -282,30 +340,6 @@ const BettingSystem = () => {
       setPotentialWin(0);
     }
   }, [betAmount, multiplier]);
-
-  // Handle bet amount input
-  const handleBetAmountChange = (e) => {
-    const value = e.target.value;
-    // Only allow numeric input with up to 2 decimal places
-    if (value === "" || /^\d+(\.\d{0,2})?$/.test(value)) {
-      setBetAmount(value);
-    }
-  };
-
-  // Handle quick bet amounts
-  const handleQuickAmount = (amount) => {
-    setBetAmount(amount.toString());
-  };
-
-  // Handle multiplier change
-  const handleMultiplierChange = (e) => {
-    setMultiplier(e.target.value);
-  };
-
-  // Handle quick multiplier selection
-  const handleQuickMultiplier = (mult) => {
-    setMultiplier(mult.toString());
-  };
 
   // Simulate game animation
   const simulateGameAnimation = (targetMultiplier) => {
@@ -344,7 +378,59 @@ const BettingSystem = () => {
       if (timerId) clearInterval(timerId);
     };
   };
+  // Handle bet amount input
+  const handleBetAmountChange = (e) => {
+    const value = e.target.value;
+    // Only allow numeric input with up to 2 decimal places
+    if (value === "" || /^\d+(\.\d{0,2})?$/.test(value)) {
+      setBetAmount(value);
+    }
+  };
 
+  // Handle quick bet amounts
+  const handleQuickAmount = (amount) => {
+    // If the selected amount is less than the minimum bet amount, use the minimum instead
+    if (selectedCurrency === "USD" && amount < systemSettings.minBetAmount) {
+      amount = systemSettings.minBetAmount;
+    } else if (
+      selectedCurrency === "BDT" &&
+      bdtToUSD(amount) < systemSettings.minBetAmount
+    ) {
+      // Convert BDT amount to USD for comparison, then set to minimum BDT equivalent if too low
+      amount = usdToBDT(systemSettings.minBetAmount);
+    }
+
+    // Set the bet amount with the validated value
+    setBetAmount(amount.toString());
+  };
+
+  // Handle multiplier change
+  const handleMultiplierChange = (e) => {
+    setMultiplier(e.target.value);
+  };
+
+  // Handle quick multiplier selection
+  const handleQuickMultiplier = (mult) => {
+    setMultiplier(mult.toString());
+  };
+
+  // Handle modal close for insufficient balance
+  const handleCloseInsufficientBalanceModal = () => {
+    setShowInsufficientBalanceModal(false);
+  };
+
+  // Handle minimum bet amount modal close
+  const handleCloseMinBetAmountModal = () => {
+    setShowMinBetAmountModal(false);
+
+    // If in USD, set the input value to the minimum
+    if (selectedCurrency === "USD") {
+      setBetAmount(minBetAmountRequired.toString());
+    } else {
+      // If in BDT, convert the minimum to BDT
+      setBetAmount(usdToBDT(minBetAmountRequired).toFixed(2));
+    }
+  };
   // Place bet and process game result
   const handlePlaceBet = async (e) => {
     e.preventDefault();
@@ -360,9 +446,19 @@ const BettingSystem = () => {
         ? bdtToUSD(parseFloat(betAmount))
         : parseFloat(betAmount);
 
-    // Check if user has enough balance
+    // Check minimum bet amount before checking balance
+    if (betAmountUSD < systemSettings.minBetAmount) {
+      setCurrentBetAmount(betAmountUSD);
+      setMinBetAmountRequired(systemSettings.minBetAmount);
+      setShowMinBetAmountModal(true);
+      return;
+    }
+
+    // Check if user has sufficient balance
     if (betAmountUSD > userData.balance) {
-      setError("Insufficient balance");
+      // Instead of showing an error message, show the insufficient balance modal
+      setRequiredAmount(betAmountUSD);
+      setShowInsufficientBalanceModal(true);
       return;
     }
 
@@ -386,6 +482,16 @@ const BettingSystem = () => {
 
       if (!response.ok) {
         const errorData = await response.json();
+
+        // Check if this is a minimum bet amount error
+        if (errorData.code === "MIN_BET_AMOUNT_ERROR") {
+          setCurrentBetAmount(betAmountUSD);
+          setMinBetAmountRequired(errorData.minBetAmount);
+          setShowMinBetAmountModal(true);
+          setIsPlacingBet(false);
+          return;
+        }
+
         throw new Error(errorData.message || "Failed to place Trade");
       }
 
@@ -412,8 +518,18 @@ const BettingSystem = () => {
               : data.bet.actualWinning.toFixed(2);
           const currencySymbol = selectedCurrency === "BDT" ? "৳" : "$";
           setSuccess(`You won ${currencySymbol}${winningAmount}!`);
+
+          // Update the trading chart to show win
+          if (window.updateTradingChart) {
+            window.updateTradingChart("win");
+          }
         } else {
           setError("Better luck next time!");
+
+          // Update the trading chart to show loss
+          if (window.updateTradingChart) {
+            window.updateTradingChart("lose");
+          }
         }
 
         // Refresh bet history
@@ -429,7 +545,7 @@ const BettingSystem = () => {
       setIsPlacingBet(false);
     }
   };
-  // Part 4: Render Function
+  // Start of component render
   return (
     <div className="min-h-screen bg-gradient-to-b from-gray-900 to-black text-white py-16 px-4 sm:px-6 pt-32">
       <div className="max-w-6xl mx-auto">
@@ -459,31 +575,6 @@ const BettingSystem = () => {
             </span>
             <Repeat className="w-4 h-4 ml-2 text-blue-400" />
           </button>
-
-          {/* Exchange Rate Info */}
-          {/* <div className="mt-2 text-xs text-gray-400 flex items-center">
-            {currencyRateLoading ? (
-              <>
-                <RefreshCw className="w-3 h-3 mr-1 animate-spin" />
-                Loading exchange rate...
-              </>
-            ) : currencyRateError ? (
-              <>
-                <AlertCircle className="w-3 h-3 mr-1 text-yellow-400" />
-                {currencyRateError}
-              </>
-            ) : (
-              <>
-                <Info className="w-3 h-3 mr-1" />
-                Exchange rate: 1 USD = {USD_TO_BDT_RATE} BDT
-                {exchangeRateLastUpdated && (
-                  <span className="ml-1">
-                    (Updated: {formatDate(exchangeRateLastUpdated)})
-                  </span>
-                )}
-              </>
-            )}
-          </div> */}
         </div>
 
         {/* Alert Messages */}
@@ -506,7 +597,6 @@ const BettingSystem = () => {
             </div>
           </div>
         )}
-
         {/* Main Content Grid */}
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
           {/* Left Column - Betting Form */}
@@ -587,83 +677,144 @@ const BettingSystem = () => {
                       disabled={isPlacingBet || isRunningGame}
                     />
                   </div>
+                  {/* Add the minimum bet requirement info */}
+                  {renderMinimumBetRequirement()}
                 </div>
 
-                {/* Quick Amounts - adjusted based on currency */}
+                {/* Quick Amounts - adjusted based on currency and minimum bet */}
                 <div className="grid grid-cols-4 gap-2 mb-6">
                   {selectedCurrency === "USD" ? (
                     <>
                       <button
                         type="button"
-                        onClick={() => handleQuickAmount(10)}
+                        onClick={() =>
+                          handleQuickAmount(
+                            Math.max(10, systemSettings.minBetAmount)
+                          )
+                        }
                         className="bg-gray-700 hover:bg-gray-600 text-sm py-2 rounded-md transition-colors"
                         disabled={isPlacingBet || isRunningGame}
                       >
-                        $10
+                        ${Math.max(10, systemSettings.minBetAmount)}
                       </button>
                       <button
                         type="button"
-                        onClick={() => handleQuickAmount(50)}
+                        onClick={() =>
+                          handleQuickAmount(
+                            Math.max(50, systemSettings.minBetAmount)
+                          )
+                        }
                         className="bg-gray-700 hover:bg-gray-600 text-sm py-2 rounded-md transition-colors"
                         disabled={isPlacingBet || isRunningGame}
                       >
-                        $50
+                        ${Math.max(50, systemSettings.minBetAmount)}
                       </button>
                       <button
                         type="button"
-                        onClick={() => handleQuickAmount(100)}
+                        onClick={() =>
+                          handleQuickAmount(
+                            Math.max(100, systemSettings.minBetAmount)
+                          )
+                        }
                         className="bg-gray-700 hover:bg-gray-600 text-sm py-2 rounded-md transition-colors"
                         disabled={isPlacingBet || isRunningGame}
                       >
-                        $100
+                        ${Math.max(100, systemSettings.minBetAmount)}
                       </button>
                       <button
                         type="button"
-                        onClick={() => handleQuickAmount(500)}
+                        onClick={() =>
+                          handleQuickAmount(
+                            Math.max(500, systemSettings.minBetAmount)
+                          )
+                        }
                         className="bg-gray-700 hover:bg-gray-600 text-sm py-2 rounded-md transition-colors"
                         disabled={isPlacingBet || isRunningGame}
                       >
-                        $500
+                        ${Math.max(500, systemSettings.minBetAmount)}
                       </button>
                     </>
                   ) : (
                     <>
                       <button
                         type="button"
-                        onClick={() => handleQuickAmount(1000)}
+                        onClick={() =>
+                          handleQuickAmount(
+                            Math.max(
+                              1000,
+                              usdToBDT(systemSettings.minBetAmount)
+                            )
+                          )
+                        }
                         className="bg-gray-700 hover:bg-gray-600 text-sm py-2 rounded-md transition-colors"
                         disabled={isPlacingBet || isRunningGame}
                       >
-                        ৳1000
+                        ৳
+                        {Math.max(
+                          1000,
+                          Math.ceil(usdToBDT(systemSettings.minBetAmount))
+                        )}
                       </button>
                       <button
                         type="button"
-                        onClick={() => handleQuickAmount(5000)}
+                        onClick={() =>
+                          handleQuickAmount(
+                            Math.max(
+                              5000,
+                              usdToBDT(systemSettings.minBetAmount)
+                            )
+                          )
+                        }
                         className="bg-gray-700 hover:bg-gray-600 text-sm py-2 rounded-md transition-colors"
                         disabled={isPlacingBet || isRunningGame}
                       >
-                        ৳5000
+                        ৳
+                        {Math.max(
+                          5000,
+                          Math.ceil(usdToBDT(systemSettings.minBetAmount))
+                        )}
                       </button>
                       <button
                         type="button"
-                        onClick={() => handleQuickAmount(10000)}
+                        onClick={() =>
+                          handleQuickAmount(
+                            Math.max(
+                              10000,
+                              usdToBDT(systemSettings.minBetAmount)
+                            )
+                          )
+                        }
                         className="bg-gray-700 hover:bg-gray-600 text-sm py-2 rounded-md transition-colors"
                         disabled={isPlacingBet || isRunningGame}
                       >
-                        ৳10000
+                        ৳
+                        {Math.max(
+                          10000,
+                          Math.ceil(usdToBDT(systemSettings.minBetAmount))
+                        )}
                       </button>
                       <button
                         type="button"
-                        onClick={() => handleQuickAmount(50000)}
+                        onClick={() =>
+                          handleQuickAmount(
+                            Math.max(
+                              50000,
+                              usdToBDT(systemSettings.minBetAmount)
+                            )
+                          )
+                        }
                         className="bg-gray-700 hover:bg-gray-600 text-sm py-2 rounded-md transition-colors"
                         disabled={isPlacingBet || isRunningGame}
                       >
-                        ৳50000
+                        ৳
+                        {Math.max(
+                          50000,
+                          Math.ceil(usdToBDT(systemSettings.minBetAmount))
+                        )}
                       </button>
                     </>
                   )}
                 </div>
-
                 {/* Multiplier Selection */}
                 <div className="mb-4">
                   <label className="block text-sm font-medium text-gray-300 mb-2">
@@ -675,7 +826,6 @@ const BettingSystem = () => {
                     className="w-full p-3 bg-gray-700 border border-gray-600 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all"
                     disabled={isPlacingBet || isRunningGame}
                   >
-                    <option value="1.5">1.5x</option>
                     <option value="2">2x</option>
                     <option value="3">3x</option>
                     <option value="5">5x</option>
@@ -739,10 +889,10 @@ const BettingSystem = () => {
                   <div className="flex flex-col">
                     <div className="flex justify-between items-center mb-2">
                       <span className="text-gray-300">
-                        Potential Win (USD):
+                        Potential Win ({selectedCurrency}):
                       </span>
                       <span className="text-lg font-bold text-green-400">
-                        {formatCurrency(potentialWin, "BDT")}
+                        {formatCurrency(potentialWin, selectedCurrency)}
                       </span>
                     </div>
                   </div>
@@ -771,7 +921,6 @@ const BettingSystem = () => {
               </form>
             </div>
           </div>
-
           {/* Middle & Right Columns - Game Display & History */}
           <div
             className={`lg:col-span-2 transition-all duration-1000 delay-300 transform ${
@@ -827,8 +976,7 @@ const BettingSystem = () => {
                 </div>
 
                 {/* Game visualization */}
-                {/* <ApexChart /> */}
-                <Trading/>
+                <Trading />
 
                 {/* Game result details */}
                 {gameResult && !isRunningGame && (
@@ -841,13 +989,17 @@ const BettingSystem = () => {
                   >
                     <div className="grid grid-cols-2 gap-4">
                       <div>
-                        <p className="text-gray-400 text-sm">Your Trade (USD)</p>
+                        <p className="text-gray-400 text-sm">
+                          Your Trade (USD)
+                        </p>
                         <p className="font-semibold">
                           {formatCurrency(gameResult.bet.amount, "USD")}
                         </p>
                       </div>
                       <div>
-                        <p className="text-gray-400 text-sm">Your Trade (BDT)</p>
+                        <p className="text-gray-400 text-sm">
+                          Your Trade (BDT)
+                        </p>
                         <p className="font-semibold">
                           {formatCurrency(gameResult.bet.amount, "BDT")}
                         </p>
@@ -960,7 +1112,6 @@ const BettingSystem = () => {
                 </div>
               </div>
             </div>
-
             {/* Bet History Card */}
             <div className="bg-gray-800/50 backdrop-blur-sm border border-gray-700 rounded-xl overflow-hidden shadow-xl mb-6">
               <div className="p-6 border-b border-gray-700 flex justify-between items-center">
@@ -1101,85 +1252,7 @@ const BettingSystem = () => {
               )}
             </div>
 
-            {/* Currency Exchange Info Card */}
-            <div className="bg-gray-800/50 backdrop-blur-sm border border-gray-700 rounded-xl overflow-hidden shadow-xl mb-6">
-              <div className="p-6 border-b border-gray-700">
-                <h3 className="text-lg font-semibold flex items-center">
-                  <Repeat className="w-5 h-5 text-blue-400 mr-2" />
-                  Currency Exchange Information
-                </h3>
-              </div>
-
-              <div className="p-6">
-                <div className="flex items-center justify-between mb-4">
-                  <div>
-                    <p className="text-gray-400 text-sm">
-                      Current Exchange Rate
-                    </p>
-                    <p className="text-xl font-bold text-white">
-                      1 USD = {USD_TO_BDT_RATE} BDT
-                    </p>
-                  </div>
-                  <button
-                    onClick={fetchExchangeRate}
-                    className={`px-4 py-2 bg-blue-600 hover:bg-blue-500 text-white rounded-lg transition-colors flex items-center text-sm ${
-                      currencyRateLoading ? "opacity-50 cursor-not-allowed" : ""
-                    }`}
-                    disabled={currencyRateLoading}
-                  >
-                    <RefreshCw
-                      className={`w-4 h-4 mr-2 ${
-                        currencyRateLoading ? "animate-spin" : ""
-                      }`}
-                    />
-                    Refresh Rate
-                  </button>
-                </div>
-
-                <div className="bg-gray-700/50 rounded-lg p-4">
-                  <div className="mb-3">
-                    <p className="font-medium text-white mb-2">
-                      Currency Conversion Examples:
-                    </p>
-                    <div className="grid grid-cols-2 gap-4">
-                      <div>
-                        <p className="text-sm text-gray-300">$10 USD</p>
-                        <p className="text-sm text-green-400">
-                          = ৳{(10 * USD_TO_BDT_RATE).toLocaleString()} BDT
-                        </p>
-                      </div>
-                      <div>
-                        <p className="text-sm text-gray-300">$50 USD</p>
-                        <p className="text-sm text-green-400">
-                          = ৳{(50 * USD_TO_BDT_RATE).toLocaleString()} BDT
-                        </p>
-                      </div>
-                      <div>
-                        <p className="text-sm text-gray-300">$100 USD</p>
-                        <p className="text-sm text-green-400">
-                          = ৳{(100 * USD_TO_BDT_RATE).toLocaleString()} BDT
-                        </p>
-                      </div>
-                      <div>
-                        <p className="text-sm text-gray-300">$500 USD</p>
-                        <p className="text-sm text-green-400">
-                          = ৳{(500 * USD_TO_BDT_RATE).toLocaleString()} BDT
-                        </p>
-                      </div>
-                    </div>
-                  </div>
-
-                  <p className="text-xs text-gray-400">
-                    Note: Exchange rates are managed by administrators and may
-                    be updated periodically. All Trade are processed in USD
-                    internally. When Trading in BDT, your amount will be
-                    converted automatically using the current exchange rate.
-                  </p>
-                </div>
-              </div>
-            </div>
-
-            {/* How To Play Card */}
+            {/* How To Play Card with minimum bet info */}
             <div className="bg-gray-800/50 backdrop-blur-sm border border-gray-700 rounded-xl overflow-hidden shadow-xl">
               <div className="p-6 border-b border-gray-700">
                 <h3 className="text-lg font-semibold flex items-center">
@@ -1215,6 +1288,13 @@ const BettingSystem = () => {
                       <p className="text-sm text-gray-400 mt-1">
                         Choose how much you want to Trade in your selected
                         currency. Make sure you have enough balance.
+                        <span className="block font-medium text-amber-400 mt-1">
+                          Note: Minimum bet amount is{" "}
+                          {selectedCurrency === "USD" ? "$" : "৳"}
+                          {selectedCurrency === "USD"
+                            ? systemSettings.minBetAmount.toFixed(2)
+                            : usdToBDT(systemSettings.minBetAmount).toFixed(2)}
+                        </span>
                       </p>
                     </div>
                   </div>
@@ -1271,6 +1351,24 @@ const BettingSystem = () => {
           </div>
         </div>
       </div>
+
+      {/* Insufficient Balance Modal */}
+      <InsufficientBalanceModal
+        isOpen={showInsufficientBalanceModal}
+        onClose={handleCloseInsufficientBalanceModal}
+        currentBalance={userData.balance}
+        requiredAmount={requiredAmount}
+        currency={selectedCurrency}
+      />
+
+      {/* Minimum Bet Amount Modal */}
+      <MinimumBetAmountModal
+        isOpen={showMinBetAmountModal}
+        onClose={handleCloseMinBetAmountModal}
+        currentAmount={currentBetAmount}
+        minBetAmount={minBetAmountRequired}
+        currency={selectedCurrency}
+      />
     </div>
   );
 };

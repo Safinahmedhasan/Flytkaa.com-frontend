@@ -39,7 +39,6 @@ const AdminBettingDashboard = () => {
   const [isVisible, setIsVisible] = useState(false);
   const [userTrackers, setUserTrackers] = useState([]);
   const [isLoadingTrackers, setIsLoadingTrackers] = useState(false);
-
   const fetchUserTrackers = async () => {
     setIsLoadingTrackers(true);
     try {
@@ -85,23 +84,26 @@ const AdminBettingDashboard = () => {
     sortBy: "createdAt",
     sortOrder: "desc",
   });
-
-  // Betting settings states
+  // Betting settings states - Updated to include minBetAmount
   const [bettingSettings, setBettingSettings] = useState({
     winRate: 50,
     minMultiplier: 1.0,
     maxMultiplier: 5.0,
+    minBetAmount: 5.0, // Default minimum bet amount
   });
   const [isEditingSettings, setIsEditingSettings] = useState(false);
   const [isLoadingSettings, setIsLoadingSettings] = useState(false);
+
+  // Updated settings form state to include minBetAmount
   const [settingsForm, setSettingsForm] = useState({
     winRate: 50,
     minMultiplier: 1.0,
     maxMultiplier: 5.0,
+    minBetAmount: 5.0, // Default minimum bet amount
   });
 
   // Constants
-  const API_URL = import.meta.env.VITE_DataHost
+  const API_URL = import.meta.env.VITE_DataHost;
   // Format currency
   const formatCurrency = (amount) => {
     return new Intl.NumberFormat("en-US", {
@@ -128,7 +130,6 @@ const AdminBettingDashboard = () => {
   const formatPercentage = (value) => {
     return `${value.toFixed(2)}%`;
   };
-
   // Initialize component
   useEffect(() => {
     setIsVisible(true);
@@ -147,6 +148,7 @@ const AdminBettingDashboard = () => {
       return () => clearTimeout(timer);
     }
   }, [error, success]);
+
   // Fetch betting statistics
   const fetchStatistics = async () => {
     setIsLoadingStats(true);
@@ -185,722 +187,7 @@ const AdminBettingDashboard = () => {
     }
   };
 
-  const renderUserTrackersCard = () => {
-    return (
-      <div className="bg-gray-800/50 backdrop-blur-sm border border-gray-700 rounded-xl overflow-hidden shadow-xl mb-6">
-        <div className="p-6 border-b border-gray-700 flex justify-between items-center">
-          <h3 className="text-lg font-semibold flex items-center">
-            <Users className="w-5 h-5 text-blue-400 mr-2" />
-            User Win Rate Monitoring
-          </h3>
-          <button
-            onClick={fetchUserTrackers}
-            className="text-blue-400 hover:text-blue-300"
-            disabled={isLoadingTrackers}
-          >
-            <RefreshCw
-              className={`w-4 h-4 ${isLoadingTrackers ? "animate-spin" : ""}`}
-            />
-          </button>
-        </div>
-
-        <div className="p-6">
-          <div className="mb-4 p-4 bg-blue-900/20 border border-blue-500/30 rounded-lg">
-            <div className="flex items-center">
-              <Info className="w-5 h-5 text-blue-400 mr-2 flex-shrink-0" />
-              <p className="text-sm text-blue-300">
-                The system is configured to maintain a win rate of approximately{" "}
-                <span className="font-bold text-white">
-                  {bettingSettings.winRate}%
-                </span>{" "}
-                across all users. Below you can monitor how closely each user's
-                actual win rate matches this target.
-              </p>
-            </div>
-          </div>
-
-          {isLoadingTrackers ? (
-            <div className="flex justify-center py-8">
-              <RefreshCw className="w-8 h-8 text-blue-400 animate-spin" />
-            </div>
-          ) : userTrackers.length > 0 ? (
-            <div className="overflow-x-auto">
-              <table className="min-w-full divide-y divide-gray-700">
-                <thead className="bg-gray-800">
-                  <tr>
-                    <th
-                      scope="col"
-                      className="px-6 py-3 text-left text-xs font-medium text-gray-300 uppercase tracking-wider"
-                    >
-                      User
-                    </th>
-                    <th
-                      scope="col"
-                      className="px-6 py-3 text-left text-xs font-medium text-gray-300 uppercase tracking-wider"
-                    >
-                      Total Bets
-                    </th>
-                    <th
-                      scope="col"
-                      className="px-6 py-3 text-left text-xs font-medium text-gray-300 uppercase tracking-wider"
-                    >
-                      Wins / Losses
-                    </th>
-                    <th
-                      scope="col"
-                      className="px-6 py-3 text-left text-xs font-medium text-gray-300 uppercase tracking-wider"
-                    >
-                      Actual Win Rate
-                    </th>
-                    <th
-                      scope="col"
-                      className="px-6 py-3 text-left text-xs font-medium text-gray-300 uppercase tracking-wider"
-                    >
-                      Compliance
-                    </th>
-                  </tr>
-                </thead>
-                <tbody className="bg-gray-800/30 divide-y divide-gray-700">
-                  {userTrackers.map((tracker) => (
-                    <tr
-                      key={tracker.userId}
-                      className="hover:bg-gray-700/30 transition-colors"
-                    >
-                      <td className="px-6 py-4 whitespace-nowrap">
-                        <div className="flex items-center">
-                          <div className="rounded-full bg-gray-700 p-1 mr-2">
-                            <User className="w-4 h-4 text-gray-400" />
-                          </div>
-                          <span>{tracker.username}</span>
-                        </div>
-                      </td>
-                      <td className="px-6 py-4 whitespace-nowrap">
-                        {tracker.totalBets}
-                      </td>
-                      <td className="px-6 py-4 whitespace-nowrap">
-                        <span className="text-green-400">
-                          {tracker.wonBets}
-                        </span>{" "}
-                        /{" "}
-                        <span className="text-red-400">
-                          {tracker.totalBets - tracker.wonBets}
-                        </span>
-                      </td>
-                      <td className="px-6 py-4 whitespace-nowrap">
-                        {tracker.currentWinRate.toFixed(2)}%
-                      </td>
-                      <td className="px-6 py-4 whitespace-nowrap">
-                        {bettingSettings.winRate > 0 ? (
-                          <div className="flex items-center">
-                            <div className="w-24 bg-gray-700 rounded-full h-2 mr-2">
-                              <div
-                                className={`h-2 rounded-full ${
-                                  Math.abs(
-                                    tracker.currentWinRate -
-                                      bettingSettings.winRate
-                                  ) <= 5
-                                    ? "bg-green-500"
-                                    : Math.abs(
-                                        tracker.currentWinRate -
-                                          bettingSettings.winRate
-                                      ) <= 15
-                                    ? "bg-yellow-500"
-                                    : "bg-red-500"
-                                }`}
-                                style={{
-                                  width: `${Math.min(
-                                    Math.max(
-                                      (tracker.currentWinRate /
-                                        bettingSettings.winRate) *
-                                        100,
-                                      0
-                                    ),
-                                    100
-                                  )}%`,
-                                }}
-                              ></div>
-                            </div>
-                            <span
-                              className={`text-xs ${
-                                Math.abs(
-                                  tracker.currentWinRate -
-                                    bettingSettings.winRate
-                                ) <= 5
-                                  ? "text-green-400"
-                                  : Math.abs(
-                                      tracker.currentWinRate -
-                                        bettingSettings.winRate
-                                    ) <= 15
-                                  ? "text-yellow-400"
-                                  : "text-red-400"
-                              }`}
-                            >
-                              {tracker.currentWinRate > bettingSettings.winRate
-                                ? `+${(
-                                    tracker.currentWinRate -
-                                    bettingSettings.winRate
-                                  ).toFixed(2)}%`
-                                : tracker.currentWinRate <
-                                  bettingSettings.winRate
-                                ? `-${(
-                                    bettingSettings.winRate -
-                                    tracker.currentWinRate
-                                  ).toFixed(2)}%`
-                                : "Perfect"}
-                            </span>
-                          </div>
-                        ) : (
-                          <span className="text-gray-400">N/A</span>
-                        )}
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
-          ) : (
-            <div className="text-center py-8 text-gray-400">
-              <p>No user betting data available yet.</p>
-              <p className="text-sm mt-2">
-                Data will appear here after users place bets.
-              </p>
-            </div>
-          )}
-        </div>
-      </div>
-    );
-  };
-
-  // Fetch bets with filters and pagination
-  const fetchBets = async (page = 1) => {
-    setIsLoadingBets(true);
-    try {
-      const token = localStorage.getItem("adminToken");
-
-      if (!token) {
-        window.location.href = "/admin/login";
-        return;
-      }
-
-      // Prepare query parameters
-      const queryParams = new URLSearchParams({
-        page,
-        limit: pagination.limit,
-        sortBy: filters.sortBy,
-        sortOrder: filters.sortOrder,
-      });
-
-      if (filters.userId) queryParams.append("userId", filters.userId);
-      if (filters.won !== "") queryParams.append("won", filters.won);
-
-      const response = await fetch(
-        `${API_URL}/admin/bets?${queryParams.toString()}`,
-        {
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
-        }
-      );
-
-      if (!response.ok) {
-        throw new Error("Failed to fetch bets");
-      }
-
-      const data = await response.json();
-      setBets(data.bets);
-      setPagination(data.pagination);
-    } catch (error) {
-      console.error("Error fetching bets:", error);
-      setError("Failed to load bets");
-    } finally {
-      setIsLoadingBets(false);
-    }
-  };
-  // Fetch betting settings
-  const fetchBettingSettings = async () => {
-    setIsLoadingSettings(true);
-    try {
-      const token = localStorage.getItem("adminToken");
-
-      if (!token) {
-        window.location.href = "/admin/login";
-        return;
-      }
-
-      const response = await fetch(`${API_URL}/admin/betting-settings`, {
-        headers: {
-          Authorization: `Bearer ${token}`,
-        },
-      });
-
-      if (response.status === 401 || response.status === 403) {
-        localStorage.removeItem("adminToken");
-        window.location.href = "/admin/login";
-        return;
-      }
-
-      if (!response.ok) {
-        throw new Error("Failed to fetch betting settings");
-      }
-
-      const data = await response.json();
-      setBettingSettings(data);
-      setSettingsForm({
-        winRate: data.winRate,
-        minMultiplier: data.minMultiplier || 1.0,
-        maxMultiplier: data.maxMultiplier || 5.0,
-      });
-    } catch (error) {
-      console.error("Error fetching betting settings:", error);
-      setError("Failed to load betting settings");
-    } finally {
-      setIsLoadingSettings(false);
-    }
-  };
-
-  // Update betting settings
-  const updateBettingSettings = async () => {
-    try {
-      const token = localStorage.getItem("adminToken");
-
-      if (!token) {
-        window.location.href = "/admin/login";
-        return;
-      }
-
-      // Validate win rate
-      if (settingsForm.winRate < 0 || settingsForm.winRate > 100) {
-        setError("Win rate must be between 0 and 100");
-        return;
-      }
-
-      // Validate multiplier range
-      if (settingsForm.minMultiplier >= settingsForm.maxMultiplier) {
-        setError("Minimum multiplier must be less than maximum multiplier");
-        return;
-      }
-
-      setIsLoadingSettings(true);
-
-      const response = await fetch(`${API_URL}/admin/betting-settings`, {
-        method: "PUT",
-        headers: {
-          Authorization: `Bearer ${token}`,
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify(settingsForm),
-      });
-
-      if (!response.ok) {
-        const errorData = await response.json();
-        throw new Error(
-          errorData.message || "Failed to update betting settings"
-        );
-      }
-
-      const data = await response.json();
-      setBettingSettings(data.settings);
-      setSuccess("Betting settings updated successfully");
-      setIsEditingSettings(false);
-    } catch (error) {
-      console.error("Error updating betting settings:", error);
-      setError(error.message || "Failed to update betting settings");
-    } finally {
-      setIsLoadingSettings(false);
-    }
-  };
-  // Handle filter change
-  const handleFilterChange = (e) => {
-    const { name, value } = e.target;
-    setFilters((prev) => ({
-      ...prev,
-      [name]: value,
-    }));
-  };
-
-  // Handle settings form change
-  const handleSettingsChange = (e) => {
-    const { name, value } = e.target;
-    setSettingsForm((prev) => ({
-      ...prev,
-      [name]: name === "winRate" ? parseInt(value) : parseFloat(value),
-    }));
-  };
-
-  // Handle apply filters
-  const handleApplyFilters = () => {
-    fetchBets(1); // Reset to first page when applying filters
-  };
-
-  // Handle reset filters
-  const handleResetFilters = () => {
-    setFilters({
-      userId: "",
-      won: "",
-      sortBy: "createdAt",
-      sortOrder: "desc",
-    });
-    fetchBets(1);
-  };
-
-  // Handle page change
-  const handlePageChange = (newPage) => {
-    fetchBets(newPage);
-  };
-
-  // Change sort
-  const handleSort = (field) => {
-    if (field === filters.sortBy) {
-      // Toggle sort order if already sorting by this field
-      setFilters((prev) => ({
-        ...prev,
-        sortOrder: prev.sortOrder === "asc" ? "desc" : "asc",
-      }));
-    } else {
-      // Set new sort field with default desc order
-      setFilters((prev) => ({
-        ...prev,
-        sortBy: field,
-        sortOrder: "desc",
-      }));
-    }
-  };
-  // Render betting settings card
-  const renderBettingSettingsCard = () => {
-    return (
-      <div className="bg-gray-800/50 backdrop-blur-sm border border-gray-700 rounded-xl overflow-hidden shadow-xl mb-6">
-        <div className="p-6 border-b border-gray-700 flex justify-between items-center">
-          <h3 className="text-lg font-semibold flex items-center">
-            <Settings className="w-5 h-5 text-blue-400 mr-2" />
-            Betting System Settings
-          </h3>
-          <div>
-            {!isEditingSettings ? (
-              <button
-                onClick={() => setIsEditingSettings(true)}
-                className="text-blue-400 hover:text-blue-300 px-3 py-1 rounded-md bg-blue-900/30 text-sm"
-              >
-                Edit Settings
-              </button>
-            ) : (
-              <div className="flex space-x-2">
-                <button
-                  onClick={() => {
-                    setIsEditingSettings(false);
-                    setSettingsForm({
-                      winRate: bettingSettings.winRate,
-                      minMultiplier: bettingSettings.minMultiplier,
-                      maxMultiplier: bettingSettings.maxMultiplier,
-                    });
-                  }}
-                  className="text-gray-400 hover:text-gray-300 px-3 py-1 rounded-md bg-gray-700 text-sm"
-                >
-                  Cancel
-                </button>
-                <button
-                  onClick={updateBettingSettings}
-                  className="text-green-400 hover:text-green-300 px-3 py-1 rounded-md bg-green-900/30 text-sm flex items-center"
-                  disabled={isLoadingSettings}
-                >
-                  {isLoadingSettings ? (
-                    <RefreshCw className="w-4 h-4 mr-1 animate-spin" />
-                  ) : (
-                    <Save className="w-4 h-4 mr-1" />
-                  )}
-                  Save
-                </button>
-              </div>
-            )}
-          </div>
-        </div>
-
-        <div className="p-6">
-          {isLoadingSettings && !isEditingSettings ? (
-            <div className="flex justify-center">
-              <RefreshCw className="w-6 h-6 text-blue-400 animate-spin" />
-            </div>
-          ) : (
-            <>
-              {isEditingSettings ? (
-                <div className="space-y-6">
-                  {/* Win Rate Setting */}
-                  <div>
-                    <label className="block text-sm font-medium text-gray-300 mb-2">
-                      Win Rate (%)
-                    </label>
-                    <div className="flex flex-col space-y-2">
-                      <input
-                        type="range"
-                        name="winRate"
-                        min="0"
-                        max="100"
-                        value={settingsForm.winRate}
-                        onChange={handleSettingsChange}
-                        className="w-full"
-                      />
-                      <div className="flex justify-between items-center">
-                        <input
-                          type="number"
-                          name="winRate"
-                          min="0"
-                          max="100"
-                          value={settingsForm.winRate}
-                          onChange={handleSettingsChange}
-                          className="w-24 p-2 bg-gray-700 border border-gray-600 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all"
-                        />
-                        <span className="text-gray-400">
-                          Users will win approximately{" "}
-                          <span className="font-bold text-white">
-                            {settingsForm.winRate}%
-                          </span>{" "}
-                          of bets
-                        </span>
-                      </div>
-                    </div>
-
-                    {/* Warning for low win rates */}
-                    {settingsForm.winRate < 20 && (
-                      <div className="mt-2 p-3 bg-amber-900/30 border border-amber-500/30 rounded-lg flex items-start">
-                        <AlertTriangle className="w-5 h-5 text-amber-400 mr-2 flex-shrink-0" />
-                        <p className="text-sm text-amber-300">
-                          Warning: Setting a very low win rate may discourage
-                          users from playing. Consider a more balanced approach.
-                        </p>
-                      </div>
-                    )}
-                  </div>
-
-                  {/* Multiplier Settings */}
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    <div>
-                      <label className="block text-sm font-medium text-gray-300 mb-2">
-                        Minimum Multiplier
-                      </label>
-                      <input
-                        type="number"
-                        name="minMultiplier"
-                        min="1"
-                        max="4.99"
-                        step="0.1"
-                        value={settingsForm.minMultiplier}
-                        onChange={handleSettingsChange}
-                        className="w-full p-2 bg-gray-700 border border-gray-600 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all"
-                      />
-                    </div>
-                    <div>
-                      <label className="block text-sm font-medium text-gray-300 mb-2">
-                        Maximum Multiplier
-                      </label>
-                      <input
-                        type="number"
-                        name="maxMultiplier"
-                        min="1.1"
-                        max="10"
-                        step="0.1"
-                        value={settingsForm.maxMultiplier}
-                        onChange={handleSettingsChange}
-                        className="w-full p-2 bg-gray-700 border border-gray-600 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all"
-                      />
-                    </div>
-                  </div>
-                </div>
-              ) : (
-                <div className="space-y-4">
-                  <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                    <div className="bg-gray-700/50 p-4 rounded-lg">
-                      <p className="text-gray-400 text-sm">Current Win Rate</p>
-                      <div className="flex items-center mt-1">
-                        <div className="text-xl font-bold mr-2">
-                          {bettingSettings.winRate}%
-                        </div>
-                        <div className="text-sm text-gray-400">
-                          ({bettingSettings.winRate} wins per 100 bets)
-                        </div>
-                      </div>
-                    </div>
-                    <div className="bg-gray-700/50 p-4 rounded-lg">
-                      <p className="text-gray-400 text-sm">Multiplier Range</p>
-                      <div className="text-xl font-bold mt-1">
-                        {bettingSettings.minMultiplier}x -{" "}
-                        {bettingSettings.maxMultiplier}x
-                      </div>
-                    </div>
-                    <div className="bg-gray-700/50 p-4 rounded-lg">
-                      <p className="text-gray-400 text-sm">Last Updated</p>
-                      <div className="text-xl font-bold mt-1">
-                        {formatDateTime(bettingSettings.lastUpdated)}
-                      </div>
-                    </div>
-                  </div>
-
-                  <div className="w-full bg-gray-700 rounded-full h-4">
-                    <div
-                      className="bg-blue-500 h-4 rounded-full"
-                      style={{ width: `${bettingSettings.winRate}%` }}
-                    ></div>
-                  </div>
-
-                  <div className="flex justify-between text-sm text-gray-400">
-                    <span>0% (Always Lose)</span>
-                    <span>50% (Fair)</span>
-                    <span>100% (Always Win)</span>
-                  </div>
-                </div>
-              )}
-            </>
-          )}
-        </div>
-      </div>
-    );
-  };
-  // Render statistics cards
-  const renderStatisticsCards = () => {
-    return (
-      <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-6 mb-8">
-        {/* Total Bets Card */}
-        <div className="bg-gradient-to-br from-blue-600/20 to-blue-800/20 backdrop-blur-sm border border-blue-500/30 rounded-xl p-5 shadow-xl">
-          <div className="flex justify-between items-start">
-            <div>
-              <p className="text-gray-400 text-sm">Total Bets</p>
-              {isLoadingStats ? (
-                <div className="h-6 w-20 bg-blue-800/50 rounded animate-pulse mt-1"></div>
-              ) : (
-                <h3 className="text-xl font-bold mt-1">
-                  {statistics?.totalBets.toLocaleString()}
-                </h3>
-              )}
-            </div>
-            <div className="bg-blue-500/20 p-3 rounded-lg">
-              <BarChart className="h-5 w-5 text-blue-400" />
-            </div>
-          </div>
-          {!isLoadingStats && statistics && (
-            <div className="mt-4">
-              <div className="flex justify-between items-center text-sm">
-                <span className="text-green-400">
-                  {statistics.winningBets.toLocaleString()} wins
-                </span>
-                <span className="text-red-400">
-                  {statistics.losingBets.toLocaleString()} losses
-                </span>
-              </div>
-            </div>
-          )}
-        </div>
-
-        {/* Win Rate Card */}
-        <div className="bg-gradient-to-br from-green-600/20 to-green-800/20 backdrop-blur-sm border border-green-500/30 rounded-xl p-5 shadow-xl">
-          <div className="flex justify-between items-start">
-            <div>
-              <p className="text-gray-400 text-sm">Win Rate</p>
-              {isLoadingStats ? (
-                <div className="h-6 w-20 bg-green-800/50 rounded animate-pulse mt-1"></div>
-              ) : (
-                <h3 className="text-xl font-bold mt-1">
-                  {formatPercentage(statistics?.winRate || 0)}
-                </h3>
-              )}
-            </div>
-            <div className="bg-green-500/20 p-3 rounded-lg">
-              <Percent className="h-5 w-5 text-green-400" />
-            </div>
-          </div>
-          {!isLoadingStats && statistics && (
-            <div className="mt-4">
-              <div className="w-full bg-gray-700 rounded-full h-2">
-                <div
-                  className="bg-green-500 h-2 rounded-full"
-                  style={{ width: `${statistics.winRate}%` }}
-                ></div>
-              </div>
-            </div>
-          )}
-        </div>
-
-        {/* Total Bet Amount Card */}
-        <div className="bg-gradient-to-br from-purple-600/20 to-purple-800/20 backdrop-blur-sm border border-purple-500/30 rounded-xl p-5 shadow-xl">
-          <div className="flex justify-between items-start">
-            <div>
-              <p className="text-gray-400 text-sm">Total Bet Amount</p>
-              {isLoadingStats ? (
-                <div className="h-6 w-20 bg-purple-800/50 rounded animate-pulse mt-1"></div>
-              ) : (
-                <h3 className="text-xl font-bold mt-1">
-                  {formatCurrency(statistics?.totalBetAmount || 0)}
-                </h3>
-              )}
-            </div>
-            <div className="bg-purple-500/20 p-3 rounded-lg">
-              <DollarSign className="h-5 w-5 text-purple-400" />
-            </div>
-          </div>
-          {!isLoadingStats && statistics && (
-            <div className="mt-4">
-              <div className="flex justify-between items-center text-sm">
-                <span>
-                  Avg. Bet:{" "}
-                  {formatCurrency(
-                    statistics.totalBetAmount / (statistics.totalBets || 1)
-                  )}
-                </span>
-              </div>
-            </div>
-          )}
-        </div>
-
-        {/* House Profit/Loss Card */}
-        <div
-          className={`bg-gradient-to-br ${
-            !isLoadingStats && statistics?.houseProfitLoss >= 0
-              ? "from-emerald-600/20 to-emerald-800/20 border-emerald-500/30"
-              : "from-red-600/20 to-red-800/20 border-red-500/30"
-          } backdrop-blur-sm border rounded-xl p-5 shadow-xl`}
-        >
-          <div className="flex justify-between items-start">
-            <div>
-              <p className="text-gray-400 text-sm">House Profit/Loss</p>
-              {isLoadingStats ? (
-                <div className="h-6 w-20 bg-gray-800/50 rounded animate-pulse mt-1"></div>
-              ) : (
-                <h3
-                  className={`text-xl font-bold mt-1 ${
-                    statistics?.houseProfitLoss >= 0
-                      ? "text-emerald-400"
-                      : "text-red-400"
-                  }`}
-                >
-                  {formatCurrency(statistics?.houseProfitLoss || 0)}
-                </h3>
-              )}
-            </div>
-            <div
-              className={`p-3 rounded-lg ${
-                !isLoadingStats && statistics?.houseProfitLoss >= 0
-                  ? "bg-emerald-500/20"
-                  : "bg-red-500/20"
-              }`}
-            >
-              {!isLoadingStats && statistics?.houseProfitLoss >= 0 ? (
-                <TrendingUp className="h-5 w-5 text-emerald-400" />
-              ) : (
-                <TrendingDown className="h-5 w-5 text-red-400" />
-              )}
-            </div>
-          </div>
-          {!isLoadingStats && statistics && (
-            <div className="mt-4">
-              <div className="flex justify-between items-center text-sm">
-                <span>
-                  Payout: {formatCurrency(statistics.totalWinningAmount || 0)}
-                </span>
-              </div>
-            </div>
-          )}
-        </div>
-      </div>
-    );
-  };
-  // Render recent activity
+  // Fix for the missing renderRecentActivity function
   const renderRecentActivity = () => {
     return (
       <div className="bg-gray-800/50 backdrop-blur-sm border border-gray-700 rounded-xl overflow-hidden shadow-xl mb-6">
@@ -1002,7 +289,8 @@ const AdminBettingDashboard = () => {
       </div>
     );
   };
-  // Render filters card
+
+  // Fix for the missing renderFiltersCard function
   const renderFiltersCard = () => {
     return (
       <div className="bg-gray-800/50 backdrop-blur-sm border border-gray-700 rounded-xl overflow-hidden shadow-xl mb-6">
@@ -1085,7 +373,8 @@ const AdminBettingDashboard = () => {
       </div>
     );
   };
-  // Render bets table
+
+  // Fix for the missing renderBetsTable function
   const renderBetsTable = () => {
     return (
       <div className="bg-gray-800/50 backdrop-blur-sm border border-gray-700 rounded-xl overflow-hidden shadow-xl">
@@ -1381,7 +670,787 @@ const AdminBettingDashboard = () => {
       </div>
     );
   };
-  // Main render
+
+  // Fetch bets with filters and pagination
+  const fetchBets = async (page = 1) => {
+    setIsLoadingBets(true);
+    try {
+      const token = localStorage.getItem("adminToken");
+
+      if (!token) {
+        window.location.href = "/admin/login";
+        return;
+      }
+
+      // Prepare query parameters
+      const queryParams = new URLSearchParams({
+        page,
+        limit: pagination.limit,
+        sortBy: filters.sortBy,
+        sortOrder: filters.sortOrder,
+      });
+
+      if (filters.userId) queryParams.append("userId", filters.userId);
+      if (filters.won !== "") queryParams.append("won", filters.won);
+
+      const response = await fetch(
+        `${API_URL}/admin/bets?${queryParams.toString()}`,
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        }
+      );
+
+      if (!response.ok) {
+        throw new Error("Failed to fetch bets");
+      }
+
+      const data = await response.json();
+      setBets(data.bets);
+      setPagination(data.pagination);
+    } catch (error) {
+      console.error("Error fetching bets:", error);
+      setError("Failed to load bets");
+    } finally {
+      setIsLoadingBets(false);
+    }
+  };
+  // Fetch betting settings - Updated to handle minBetAmount
+  const fetchBettingSettings = async () => {
+    setIsLoadingSettings(true);
+    try {
+      const token = localStorage.getItem("adminToken");
+
+      if (!token) {
+        window.location.href = "/admin/login";
+        return;
+      }
+
+      const response = await fetch(`${API_URL}/admin/betting-settings`, {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      });
+
+      if (response.status === 401 || response.status === 403) {
+        localStorage.removeItem("adminToken");
+        window.location.href = "/admin/login";
+        return;
+      }
+
+      if (!response.ok) {
+        throw new Error("Failed to fetch betting settings");
+      }
+
+      const data = await response.json();
+
+      // Update state with settings data, including minBetAmount
+      setBettingSettings({
+        winRate: data.winRate || 50,
+        minMultiplier: data.minMultiplier || 1.0,
+        maxMultiplier: data.maxMultiplier || 5.0,
+        minBetAmount: data.minBetAmount || 5.0,
+        lastUpdated: data.lastUpdated,
+      });
+
+      // Update form state with the same data
+      setSettingsForm({
+        winRate: data.winRate || 50,
+        minMultiplier: data.minMultiplier || 1.0,
+        maxMultiplier: data.maxMultiplier || 5.0,
+        minBetAmount: data.minBetAmount || 5.0,
+      });
+
+      console.log("Minimum bet amount loaded:", data.minBetAmount || 5.0);
+    } catch (error) {
+      console.error("Error fetching betting settings:", error);
+      setError("Failed to load betting settings");
+    } finally {
+      setIsLoadingSettings(false);
+    }
+  };
+  // Update betting settings - Updated to include minBetAmount
+  const updateBettingSettings = async () => {
+    try {
+      const token = localStorage.getItem("adminToken");
+
+      if (!token) {
+        window.location.href = "/admin/login";
+        return;
+      }
+
+      // Validate win rate
+      if (settingsForm.winRate < 0 || settingsForm.winRate > 100) {
+        setError("Win rate must be between 0 and 100");
+        return;
+      }
+
+      // Validate multiplier range
+      if (settingsForm.minMultiplier >= settingsForm.maxMultiplier) {
+        setError("Minimum multiplier must be less than maximum multiplier");
+        return;
+      }
+
+      // Validate minimum bet amount
+      if (settingsForm.minBetAmount < 0) {
+        setError("Minimum bet amount cannot be negative");
+        return;
+      }
+
+      setIsLoadingSettings(true);
+
+      // Include minBetAmount in the request body
+      const response = await fetch(`${API_URL}/admin/betting-settings`, {
+        method: "PUT",
+        headers: {
+          Authorization: `Bearer ${token}`,
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify(settingsForm),
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(
+          errorData.message || "Failed to update betting settings"
+        );
+      }
+
+      const data = await response.json();
+      setBettingSettings(data.settings);
+      setSuccess("Betting settings updated successfully");
+      setIsEditingSettings(false);
+    } catch (error) {
+      console.error("Error updating betting settings:", error);
+      setError(error.message || "Failed to update betting settings");
+    } finally {
+      setIsLoadingSettings(false);
+    }
+  };
+  // Handle filter change
+  const handleFilterChange = (e) => {
+    const { name, value } = e.target;
+    setFilters((prev) => ({
+      ...prev,
+      [name]: value,
+    }));
+  };
+
+  // Handle settings form change - Updated to handle minBetAmount
+  const handleSettingsChange = (e) => {
+    const { name, value } = e.target;
+
+    // Type conversion depends on the field
+    let convertedValue;
+    if (name === "winRate") {
+      convertedValue = parseInt(value);
+    } else if (name === "minBetAmount") {
+      convertedValue = parseFloat(value);
+    } else {
+      convertedValue = parseFloat(value);
+    }
+
+    setSettingsForm((prev) => ({
+      ...prev,
+      [name]: convertedValue,
+    }));
+  };
+
+  // ----------
+  // ----------
+  // Handle apply filters
+  const handleApplyFilters = () => {
+    fetchBets(1); // Reset to first page when applying filters
+  };
+
+  // Handle reset filters
+  const handleResetFilters = () => {
+    setFilters({
+      userId: "",
+      won: "",
+      sortBy: "createdAt",
+      sortOrder: "desc",
+    });
+    fetchBets(1);
+  };
+
+  // Handle page change
+  const handlePageChange = (newPage) => {
+    fetchBets(newPage);
+  };
+
+  // Change sort
+  const handleSort = (field) => {
+    if (field === filters.sortBy) {
+      // Toggle sort order if already sorting by this field
+      setFilters((prev) => ({
+        ...prev,
+        sortOrder: prev.sortOrder === "asc" ? "desc" : "asc",
+      }));
+    } else {
+      // Set new sort field with default desc order
+      setFilters((prev) => ({
+        ...prev,
+        sortBy: field,
+        sortOrder: "desc",
+      }));
+    }
+  };
+  // Render betting settings card - Updated to include minBetAmount
+  const renderBettingSettingsCard = () => {
+    return (
+      <div className="bg-gray-800/50 backdrop-blur-sm border border-gray-700 rounded-xl overflow-hidden shadow-xl mb-6">
+        <div className="p-6 border-b border-gray-700 flex justify-between items-center">
+          <h3 className="text-lg font-semibold flex items-center">
+            <Settings className="w-5 h-5 text-blue-400 mr-2" />
+            Betting System Settings
+          </h3>
+          <div>
+            {!isEditingSettings ? (
+              <button
+                onClick={() => setIsEditingSettings(true)}
+                className="text-blue-400 hover:text-blue-300 px-3 py-1 rounded-md bg-blue-900/30 text-sm"
+              >
+                Edit Settings
+              </button>
+            ) : (
+              <div className="flex space-x-2">
+                <button
+                  onClick={() => {
+                    setIsEditingSettings(false);
+                    setSettingsForm({
+                      winRate: bettingSettings.winRate,
+                      minMultiplier: bettingSettings.minMultiplier,
+                      maxMultiplier: bettingSettings.maxMultiplier,
+                      minBetAmount: bettingSettings.minBetAmount,
+                    });
+                  }}
+                  className="text-gray-400 hover:text-gray-300 px-3 py-1 rounded-md bg-gray-700 text-sm"
+                >
+                  Cancel
+                </button>
+                <button
+                  onClick={updateBettingSettings}
+                  className="text-green-400 hover:text-green-300 px-3 py-1 rounded-md bg-green-900/30 text-sm flex items-center"
+                  disabled={isLoadingSettings}
+                >
+                  {isLoadingSettings ? (
+                    <RefreshCw className="w-4 h-4 mr-1 animate-spin" />
+                  ) : (
+                    <Save className="w-4 h-4 mr-1" />
+                  )}
+                  Save
+                </button>
+              </div>
+            )}
+          </div>
+        </div>
+
+        <div className="p-6">
+          {isLoadingSettings && !isEditingSettings ? (
+            <div className="flex justify-center">
+              <RefreshCw className="w-6 h-6 text-blue-400 animate-spin" />
+            </div>
+          ) : (
+            <>
+              {isEditingSettings ? (
+                <div className="space-y-6">
+                  {/* Win Rate Setting */}
+                  <div>
+                    <label className="block text-sm font-medium text-gray-300 mb-2">
+                      Win Rate (%)
+                    </label>
+                    <div className="flex flex-col space-y-2">
+                      <input
+                        type="range"
+                        name="winRate"
+                        min="0"
+                        max="100"
+                        value={settingsForm.winRate}
+                        onChange={handleSettingsChange}
+                        className="w-full"
+                      />
+                      <div className="flex justify-between items-center">
+                        <input
+                          type="number"
+                          name="winRate"
+                          min="0"
+                          max="100"
+                          value={settingsForm.winRate}
+                          onChange={handleSettingsChange}
+                          className="w-24 p-2 bg-gray-700 border border-gray-600 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all"
+                        />
+                        <span className="text-gray-400">
+                          Users will win approximately{" "}
+                          <span className="font-bold text-white">
+                            {settingsForm.winRate}%
+                          </span>{" "}
+                          of bets
+                        </span>
+                      </div>
+                    </div>
+                    {/* Warning for low win rates */}
+                    {settingsForm.winRate < 20 && (
+                      <div className="mt-2 p-3 bg-amber-900/30 border border-amber-500/30 rounded-lg flex items-start">
+                        <AlertTriangle className="w-5 h-5 text-amber-400 mr-2 flex-shrink-0" />
+                        <p className="text-sm text-amber-300">
+                          Warning: Setting a very low win rate may discourage
+                          users from playing. Consider a more balanced approach.
+                        </p>
+                      </div>
+                    )}
+                  </div>
+
+                  {/* Minimum Bet Amount Setting - New Section */}
+                  <div>
+                    <label className="block text-sm font-medium text-gray-300 mb-2">
+                      Minimum Bet Amount (USD)
+                    </label>
+                    <div className="flex items-center">
+                      <span className="bg-gray-700 flex items-center px-3 py-2 rounded-l-lg border-r border-gray-600">
+                        <DollarSign className="h-5 w-5 text-gray-400" />
+                      </span>
+                      <input
+                        type="number"
+                        name="minBetAmount"
+                        min="0"
+                        step="0.01"
+                        value={settingsForm.minBetAmount}
+                        onChange={handleSettingsChange}
+                        className="w-full p-2 bg-gray-700 border-0 rounded-r-lg text-white focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all"
+                      />
+                    </div>
+                    <p className="text-sm text-gray-400 mt-1">
+                      Users will not be able to place bets below this amount
+                    </p>
+                  </div>
+
+                  {/* Multiplier Settings */}
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div>
+                      <label className="block text-sm font-medium text-gray-300 mb-2">
+                        Minimum Multiplier
+                      </label>
+                      <input
+                        type="number"
+                        name="minMultiplier"
+                        min="1"
+                        max="4.99"
+                        step="0.1"
+                        value={settingsForm.minMultiplier}
+                        onChange={handleSettingsChange}
+                        className="w-full p-2 bg-gray-700 border border-gray-600 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all"
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-sm font-medium text-gray-300 mb-2">
+                        Maximum Multiplier
+                      </label>
+                      <input
+                        type="number"
+                        name="maxMultiplier"
+                        min="1.1"
+                        max="10"
+                        step="0.1"
+                        value={settingsForm.maxMultiplier}
+                        onChange={handleSettingsChange}
+                        className="w-full p-2 bg-gray-700 border border-gray-600 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all"
+                      />
+                    </div>
+                  </div>
+                </div>
+              ) : (
+                <div className="space-y-4">
+                  <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+                    <div className="bg-gray-700/50 p-4 rounded-lg">
+                      <p className="text-gray-400 text-sm">Current Win Rate</p>
+                      <div className="flex items-center mt-1">
+                        <div className="text-xl font-bold mr-2">
+                          {bettingSettings.winRate}%
+                        </div>
+                        <div className="text-sm text-gray-400">
+                          ({bettingSettings.winRate} wins per 100 bets)
+                        </div>
+                      </div>
+                    </div>
+                    <div className="bg-gray-700/50 p-4 rounded-lg">
+                      <p className="text-gray-400 text-sm">Multiplier Range</p>
+                      <div className="text-xl font-bold mt-1">
+                        {bettingSettings.minMultiplier}x -{" "}
+                        {bettingSettings.maxMultiplier}x
+                      </div>
+                    </div>
+                    {/* New Minimum Bet Amount Display */}
+                    <div className="bg-gray-700/50 p-4 rounded-lg">
+                      <p className="text-gray-400 text-sm">Minimum Bet</p>
+                      <div className="text-xl font-bold mt-1">
+                        ${bettingSettings.minBetAmount?.toFixed(2) || "5.00"}
+                      </div>
+                    </div>
+                    <div className="bg-gray-700/50 p-4 rounded-lg">
+                      <p className="text-gray-400 text-sm">Last Updated</p>
+                      <div className="text-xl font-bold mt-1">
+                        {formatDateTime(bettingSettings.lastUpdated)}
+                      </div>
+                    </div>
+                  </div>
+
+                  <div className="w-full bg-gray-700 rounded-full h-4">
+                    <div
+                      className="bg-blue-500 h-4 rounded-full"
+                      style={{ width: `${bettingSettings.winRate}%` }}
+                    ></div>
+                  </div>
+
+                  <div className="flex justify-between text-sm text-gray-400">
+                    <span>0% (Always Lose)</span>
+                    <span>50% (Fair)</span>
+                    <span>100% (Always Win)</span>
+                  </div>
+                </div>
+              )}
+            </>
+          )}
+        </div>
+      </div>
+    );
+  };
+  // Render statistics cards
+  const renderStatisticsCards = () => {
+    // [Existing function - no changes needed for minBetAmount]
+    return (
+      <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-6 mb-8">
+        {/* Total Bets Card */}
+        <div className="bg-gradient-to-br from-blue-600/20 to-blue-800/20 backdrop-blur-sm border border-blue-500/30 rounded-xl p-5 shadow-xl">
+          <div className="flex justify-between items-start">
+            <div>
+              <p className="text-gray-400 text-sm">Total Bets</p>
+              {isLoadingStats ? (
+                <div className="h-6 w-20 bg-blue-800/50 rounded animate-pulse mt-1"></div>
+              ) : (
+                <h3 className="text-xl font-bold mt-1">
+                  {statistics?.totalBets.toLocaleString()}
+                </h3>
+              )}
+            </div>
+            <div className="bg-blue-500/20 p-3 rounded-lg">
+              <BarChart className="h-5 w-5 text-blue-400" />
+            </div>
+          </div>
+          {!isLoadingStats && statistics && (
+            <div className="mt-4">
+              <div className="flex justify-between items-center text-sm">
+                <span className="text-green-400">
+                  {statistics.winningBets.toLocaleString()} wins
+                </span>
+                <span className="text-red-400">
+                  {statistics.losingBets.toLocaleString()} losses
+                </span>
+              </div>
+            </div>
+          )}
+        </div>
+
+        {/* Win Rate Card */}
+        <div className="bg-gradient-to-br from-green-600/20 to-green-800/20 backdrop-blur-sm border border-green-500/30 rounded-xl p-5 shadow-xl">
+          <div className="flex justify-between items-start">
+            <div>
+              <p className="text-gray-400 text-sm">Win Rate</p>
+              {isLoadingStats ? (
+                <div className="h-6 w-20 bg-green-800/50 rounded animate-pulse mt-1"></div>
+              ) : (
+                <h3 className="text-xl font-bold mt-1">
+                  {formatPercentage(statistics?.winRate || 0)}
+                </h3>
+              )}
+            </div>
+            <div className="bg-green-500/20 p-3 rounded-lg">
+              <Percent className="h-5 w-5 text-green-400" />
+            </div>
+          </div>
+          {!isLoadingStats && statistics && (
+            <div className="mt-4">
+              <div className="w-full bg-gray-700 rounded-full h-2">
+                <div
+                  className="bg-green-500 h-2 rounded-full"
+                  style={{ width: `${statistics.winRate}%` }}
+                ></div>
+              </div>
+            </div>
+          )}
+        </div>
+
+        {/* Total Bet Amount Card */}
+        <div className="bg-gradient-to-br from-purple-600/20 to-purple-800/20 backdrop-blur-sm border border-purple-500/30 rounded-xl p-5 shadow-xl">
+          <div className="flex justify-between items-start">
+            <div>
+              <p className="text-gray-400 text-sm">Total Bet Amount</p>
+              {isLoadingStats ? (
+                <div className="h-6 w-20 bg-purple-800/50 rounded animate-pulse mt-1"></div>
+              ) : (
+                <h3 className="text-xl font-bold mt-1">
+                  {formatCurrency(statistics?.totalBetAmount || 0)}
+                </h3>
+              )}
+            </div>
+            <div className="bg-purple-500/20 p-3 rounded-lg">
+              <DollarSign className="h-5 w-5 text-purple-400" />
+            </div>
+          </div>
+          {!isLoadingStats && statistics && (
+            <div className="mt-4">
+              <div className="flex justify-between items-center text-sm">
+                <span>
+                  Avg. Bet:{" "}
+                  {formatCurrency(
+                    statistics.totalBetAmount / (statistics.totalBets || 1)
+                  )}
+                </span>
+              </div>
+            </div>
+          )}
+        </div>
+
+        {/* House Profit/Loss Card */}
+        <div
+          className={`bg-gradient-to-br ${
+            !isLoadingStats && statistics?.houseProfitLoss >= 0
+              ? "from-emerald-600/20 to-emerald-800/20 border-emerald-500/30"
+              : "from-red-600/20 to-red-800/20 border-red-500/30"
+          } backdrop-blur-sm border rounded-xl p-5 shadow-xl`}
+        >
+          <div className="flex justify-between items-start">
+            <div>
+              <p className="text-gray-400 text-sm">House Profit/Loss</p>
+              {isLoadingStats ? (
+                <div className="h-6 w-20 bg-gray-800/50 rounded animate-pulse mt-1"></div>
+              ) : (
+                <h3
+                  className={`text-xl font-bold mt-1 ${
+                    statistics?.houseProfitLoss >= 0
+                      ? "text-emerald-400"
+                      : "text-red-400"
+                  }`}
+                >
+                  {formatCurrency(statistics?.houseProfitLoss || 0)}
+                </h3>
+              )}
+            </div>
+            <div
+              className={`p-3 rounded-lg ${
+                !isLoadingStats && statistics?.houseProfitLoss >= 0
+                  ? "bg-emerald-500/20"
+                  : "bg-red-500/20"
+              }`}
+            >
+              {!isLoadingStats && statistics?.houseProfitLoss >= 0 ? (
+                <TrendingUp className="h-5 w-5 text-emerald-400" />
+              ) : (
+                <TrendingDown className="h-5 w-5 text-red-400" />
+              )}
+            </div>
+          </div>
+          {!isLoadingStats && statistics && (
+            <div className="mt-4">
+              <div className="flex justify-between items-center text-sm">
+                <span>
+                  Payout: {formatCurrency(statistics.totalWinningAmount || 0)}
+                </span>
+              </div>
+            </div>
+          )}
+        </div>
+      </div>
+    );
+  };
+  // Render user trackers card
+  const renderUserTrackersCard = () => {
+    return (
+      <div className="bg-gray-800/50 backdrop-blur-sm border border-gray-700 rounded-xl overflow-hidden shadow-xl mb-6">
+        <div className="p-6 border-b border-gray-700 flex justify-between items-center">
+          <h3 className="text-lg font-semibold flex items-center">
+            <Users className="w-5 h-5 text-blue-400 mr-2" />
+            User Win Rate Monitoring
+          </h3>
+          <button
+            onClick={fetchUserTrackers}
+            className="text-blue-400 hover:text-blue-300"
+            disabled={isLoadingTrackers}
+          >
+            <RefreshCw
+              className={`w-4 h-4 ${isLoadingTrackers ? "animate-spin" : ""}`}
+            />
+          </button>
+        </div>
+
+        <div className="p-6">
+          <div className="mb-4 p-4 bg-blue-900/20 border border-blue-500/30 rounded-lg">
+            <div className="flex items-center">
+              <Info className="w-5 h-5 text-blue-400 mr-2 flex-shrink-0" />
+              <p className="text-sm text-blue-300">
+                The system is configured to maintain a win rate of approximately{" "}
+                <span className="font-bold text-white">
+                  {bettingSettings.winRate}%
+                </span>{" "}
+                across all users. Below you can monitor how closely each user's
+                actual win rate matches this target.
+              </p>
+            </div>
+          </div>
+
+          {isLoadingTrackers ? (
+            <div className="flex justify-center py-8">
+              <RefreshCw className="w-8 h-8 text-blue-400 animate-spin" />
+            </div>
+          ) : userTrackers.length > 0 ? (
+            <div className="overflow-x-auto">
+              <table className="min-w-full divide-y divide-gray-700">
+                <thead className="bg-gray-800">
+                  <tr>
+                    <th
+                      scope="col"
+                      className="px-6 py-3 text-left text-xs font-medium text-gray-300 uppercase tracking-wider"
+                    >
+                      User
+                    </th>
+                    <th
+                      scope="col"
+                      className="px-6 py-3 text-left text-xs font-medium text-gray-300 uppercase tracking-wider"
+                    >
+                      Total Bets
+                    </th>
+                    <th
+                      scope="col"
+                      className="px-6 py-3 text-left text-xs font-medium text-gray-300 uppercase tracking-wider"
+                    >
+                      Wins / Losses
+                    </th>
+                    <th
+                      scope="col"
+                      className="px-6 py-3 text-left text-xs font-medium text-gray-300 uppercase tracking-wider"
+                    >
+                      Actual Win Rate
+                    </th>
+                    <th
+                      scope="col"
+                      className="px-6 py-3 text-left text-xs font-medium text-gray-300 uppercase tracking-wider"
+                    >
+                      Compliance
+                    </th>
+                  </tr>
+                </thead>
+                <tbody className="bg-gray-800/30 divide-y divide-gray-700">
+                  {userTrackers.map((tracker) => (
+                    <tr
+                      key={tracker.userId}
+                      className="hover:bg-gray-700/30 transition-colors"
+                    >
+                      <td className="px-6 py-4 whitespace-nowrap">
+                        <div className="flex items-center">
+                          <div className="rounded-full bg-gray-700 p-1 mr-2">
+                            <User className="w-4 h-4 text-gray-400" />
+                          </div>
+                          <span>{tracker.username}</span>
+                        </div>
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap">
+                        {tracker.totalBets}
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap">
+                        <span className="text-green-400">
+                          {tracker.wonBets}
+                        </span>{" "}
+                        /{" "}
+                        <span className="text-red-400">
+                          {tracker.totalBets - tracker.wonBets}
+                        </span>
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap">
+                        {tracker.currentWinRate.toFixed(2)}%
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap">
+                        {bettingSettings.winRate > 0 ? (
+                          <div className="flex items-center">
+                            <div className="w-24 bg-gray-700 rounded-full h-2 mr-2">
+                              <div
+                                className={`h-2 rounded-full ${
+                                  Math.abs(
+                                    tracker.currentWinRate -
+                                      bettingSettings.winRate
+                                  ) <= 5
+                                    ? "bg-green-500"
+                                    : Math.abs(
+                                        tracker.currentWinRate -
+                                          bettingSettings.winRate
+                                      ) <= 15
+                                    ? "bg-yellow-500"
+                                    : "bg-red-500"
+                                }`}
+                                style={{
+                                  width: `${Math.min(
+                                    Math.max(
+                                      (tracker.currentWinRate /
+                                        bettingSettings.winRate) *
+                                        100,
+                                      0
+                                    ),
+                                    100
+                                  )}%`,
+                                }}
+                              ></div>
+                            </div>
+                            <span
+                              className={`text-xs ${
+                                Math.abs(
+                                  tracker.currentWinRate -
+                                    bettingSettings.winRate
+                                ) <= 5
+                                  ? "text-green-400"
+                                  : Math.abs(
+                                      tracker.currentWinRate -
+                                        bettingSettings.winRate
+                                    ) <= 15
+                                  ? "text-yellow-400"
+                                  : "text-red-400"
+                              }`}
+                            >
+                              {tracker.currentWinRate > bettingSettings.winRate
+                                ? `+${(
+                                    tracker.currentWinRate -
+                                    bettingSettings.winRate
+                                  ).toFixed(2)}%`
+                                : tracker.currentWinRate <
+                                  bettingSettings.winRate
+                                ? `-${(
+                                    bettingSettings.winRate -
+                                    tracker.currentWinRate
+                                  ).toFixed(2)}%`
+                                : "Perfect"}
+                            </span>
+                          </div>
+                        ) : (
+                          <span className="text-gray-400">N/A</span>
+                        )}
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          ) : (
+            <div className="text-center py-8 text-gray-400">
+              <p>No user betting data available yet.</p>
+              <p className="text-sm mt-2">
+                Data will appear here after users place bets.
+              </p>
+            </div>
+          )}
+        </div>
+      </div>
+    );
+  };
+  // Main render function
   return (
     <div className="min-h-screen bg-gradient-to-b from-gray-900 to-black text-white py-16 px-4 sm:px-6 pt-32">
       <div className="max-w-7xl mx-auto">
@@ -1421,7 +1490,7 @@ const AdminBettingDashboard = () => {
           </div>
         )}
 
-        {/* Add Betting Settings Card here - right before the Statistics Cards */}
+        {/* Add Betting Settings Card */}
         <div
           className={`transition-all duration-1000 delay-100 transform ${
             isVisible ? "translate-y-0 opacity-100" : "translate-y-10 opacity-0"
@@ -1429,9 +1498,10 @@ const AdminBettingDashboard = () => {
         >
           {renderBettingSettingsCard()}
         </div>
+
         {/* Statistics Cards */}
         <div
-          className={`grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-6 mb-8 transition-all duration-1000 delay-150 transform ${
+          className={`transition-all duration-1000 delay-150 transform ${
             isVisible ? "translate-y-0 opacity-100" : "translate-y-10 opacity-0"
           }`}
         >
@@ -1462,6 +1532,8 @@ const AdminBettingDashboard = () => {
             {renderFiltersCard()}
             {renderBetsTable()}
           </div>
+
+          {/* User Trackers Column */}
           <div
             className={`transition-all duration-1000 delay-200 transform ${
               isVisible
@@ -1476,4 +1548,5 @@ const AdminBettingDashboard = () => {
     </div>
   );
 };
+
 export default AdminBettingDashboard;

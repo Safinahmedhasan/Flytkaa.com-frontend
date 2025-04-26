@@ -65,7 +65,7 @@ const UserLogin = () => {
       }));
       
       // Redirect to user profile or dashboard
-      window.location.href = '/profile'; // Update this to your actual profile route
+      window.location.href = '/'; // Update this to your actual profile route
       
     } catch (error) {
       setError(error.message);

@@ -21,6 +21,7 @@ import {
 import NotificationMarquee from "../NotificationMarquee/NotificationMarquee";
 import PartnersDisplay from "../PartnersDisplay/PartnersDisplay";
 import TestimonialsDisplay from "../TestimonialsDisplay/TestimonialsDisplay";
+import Footer from "../Footer/Footer";
 
 const UserDashboard = () => {
   const navigate = useNavigate();
@@ -335,7 +336,7 @@ const UserDashboard = () => {
               {/* <Link to="/profile" className="p-2 rounded-full bg-indigo-700 text-white hover:bg-indigo-600 transition-colors">
                 <User size={20} />
               </Link> */}
-              <button 
+              <button
                 onClick={() => {
                   localStorage.removeItem("userToken");
                   localStorage.removeItem("userData");
@@ -371,6 +372,118 @@ const UserDashboard = () => {
             </span>
           </button>
         </div>
+      </div>
+
+      {/* Menu Grid */}
+      <div className="container mx-auto px-4 py-8">
+        <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
+          {/* Deposit */}
+          <Link
+            to="/deposit"
+            className="bg-gray-800 rounded-lg border border-indigo-500/30 p-4 flex flex-col items-center justify-center hover:bg-gray-700 transition-colors shadow-md"
+          >
+            <div className="w-12 h-12 flex items-center justify-center bg-indigo-900/50 rounded-full mb-2">
+              <ArrowDown size={24} className="text-green-400" />
+            </div>
+            <span className="font-medium text-gray-200">Deposit</span>
+          </Link>
+
+          {/* Withdraw */}
+          <Link
+            to="/withdraw"
+            className="bg-gray-800 rounded-lg border border-indigo-500/30 p-4 flex flex-col items-center justify-center hover:bg-gray-700 transition-colors shadow-md"
+          >
+            <div className="w-12 h-12 flex items-center justify-center bg-indigo-900/50 rounded-full mb-2">
+              <ArrowUp size={24} className="text-red-400" />
+            </div>
+            <span className="font-medium text-gray-200">Withdraw</span>
+          </Link>
+
+          {/* Plan */}
+          {/* <div className="bg-gray-800 rounded-lg border border-indigo-500/30 p-4 flex flex-col items-center justify-center hover:bg-gray-700 transition-colors shadow-md cursor-pointer">
+            <div className="w-12 h-12 flex items-center justify-center bg-indigo-900/50 rounded-full mb-2">
+              <ClipboardList size={24} className="text-yellow-400" />
+            </div>
+            <span className="font-medium text-gray-200">Plan</span>
+          </div> */}
+
+          {/* Task */}
+          {/* <div className="bg-gray-800 rounded-lg border border-indigo-500/30 p-4 flex flex-col items-center justify-center hover:bg-gray-700 transition-colors shadow-md cursor-pointer">
+            <div className="w-12 h-12 flex items-center justify-center bg-indigo-900/50 rounded-full mb-2">
+              <CheckSquare size={24} className="text-blue-400" />
+            </div>
+            <span className="font-medium text-gray-200">Task</span>
+          </div> */}
+
+          {/* Profile */}
+          {/* <Link
+            to="/profile"
+            className="bg-gray-800 rounded-lg border border-indigo-500/30 p-4 flex flex-col items-center justify-center hover:bg-gray-700 transition-colors shadow-md"
+          >
+            <div className="w-12 h-12 flex items-center justify-center bg-indigo-900/50 rounded-full mb-2">
+              <User size={24} className="text-purple-400" />
+            </div>
+            <span className="font-medium text-gray-200">Profile</span>
+          </Link> */}
+
+          {/* Transactions */}
+          {/* <div className="bg-gray-800 rounded-lg border border-indigo-500/30 p-4 flex flex-col items-center justify-center hover:bg-gray-700 transition-colors shadow-md cursor-pointer">
+            <div className="w-12 h-12 flex items-center justify-center bg-indigo-900/50 rounded-full mb-2">
+              <FileText size={24} className="text-teal-400" />
+            </div>
+            <span className="font-medium text-gray-200">Transac</span>
+          </div> */}
+
+          {/* Refer */}
+          <Link to="/DetailsReferralDetails">
+            <div className="bg-gray-800 rounded-lg border border-indigo-500/30 p-4 flex flex-col items-center justify-center hover:bg-gray-700 transition-colors shadow-md cursor-pointer">
+              <div className="w-12 h-12 flex items-center justify-center bg-indigo-900/50 rounded-full mb-2">
+                <Users size={24} className="text-pink-400" />
+              </div>
+              <span className="font-medium text-gray-200">Refer</span>
+            </div>
+          </Link>
+
+          {/* Helpline */}
+          <Link to="/Helpline">
+            <div className="bg-gray-800 rounded-lg border border-indigo-500/30 p-4 flex flex-col items-center justify-center hover:bg-gray-700 transition-colors shadow-md cursor-pointer">
+              <div className="w-12 h-12 flex items-center justify-center bg-indigo-900/50 rounded-full mb-2">
+                <MessageCircle size={24} className="text-orange-400" />
+              </div>
+              <span className="font-medium text-gray-200">Helpline</span>
+            </div>
+          </Link>
+        </div>
+      </div>
+
+      {/* Trading Banner */}
+      <div className="container mx-auto px-4 py-6 mb-8">
+        <Link to="/BettingSystem">
+          <div className="bg-gradient-to-r from-indigo-900/40 to-purple-900/40 backdrop-blur-sm border border-indigo-500/30 rounded-xl overflow-hidden shadow-xl hover:border-indigo-500/60 transition-all">
+            <div className="p-6 flex flex-col md:flex-row items-center">
+              <div className="mb-4 md:mb-0 md:mr-6 flex-shrink-0">
+                <div className="bg-indigo-900/50 p-4 rounded-full">
+                  <TrendingUp size={32} className="text-indigo-400" />
+                </div>
+              </div>
+              <div className="text-center md:text-left md:flex-grow">
+                <h3 className="text-xl font-bold text-white">
+                  Start Trading Now
+                </h3>
+                <p className="text-indigo-300 mt-1">
+                  Access our advanced trading platform and multiply your
+                  earnings
+                </p>
+              </div>
+              <div className="mt-4 md:mt-0">
+                <button className="px-4 py-2 bg-indigo-600 rounded text-white text-sm flex items-center hover:bg-indigo-500 transition-colors">
+                  <ExternalLink size={14} className="mr-2" />
+                  <span>Start Trading</span>
+                </button>
+              </div>
+            </div>
+          </div>
+        </Link>
       </div>
 
       {/* Dashboard Overview Section */}
@@ -569,118 +682,8 @@ const UserDashboard = () => {
         </div>
       </div>
 
-      {/* Menu Grid */}
-      <div className="container mx-auto px-4 py-8">
-        <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
-          {/* Deposit */}
-          <Link
-            to="/deposit"
-            className="bg-gray-800 rounded-lg border border-indigo-500/30 p-4 flex flex-col items-center justify-center hover:bg-gray-700 transition-colors shadow-md"
-          >
-            <div className="w-12 h-12 flex items-center justify-center bg-indigo-900/50 rounded-full mb-2">
-              <ArrowDown size={24} className="text-green-400" />
-            </div>
-            <span className="font-medium text-gray-200">Deposit</span>
-          </Link>
-
-          {/* Withdraw */}
-          <Link
-            to="/withdraw"
-            className="bg-gray-800 rounded-lg border border-indigo-500/30 p-4 flex flex-col items-center justify-center hover:bg-gray-700 transition-colors shadow-md"
-          >
-            <div className="w-12 h-12 flex items-center justify-center bg-indigo-900/50 rounded-full mb-2">
-              <ArrowUp size={24} className="text-red-400" />
-            </div>
-            <span className="font-medium text-gray-200">Withdraw</span>
-          </Link>
-
-          {/* Plan */}
-          <div className="bg-gray-800 rounded-lg border border-indigo-500/30 p-4 flex flex-col items-center justify-center hover:bg-gray-700 transition-colors shadow-md cursor-pointer">
-            <div className="w-12 h-12 flex items-center justify-center bg-indigo-900/50 rounded-full mb-2">
-              <ClipboardList size={24} className="text-yellow-400" />
-            </div>
-            <span className="font-medium text-gray-200">Plan</span>
-          </div>
-
-          {/* Task */}
-          <div className="bg-gray-800 rounded-lg border border-indigo-500/30 p-4 flex flex-col items-center justify-center hover:bg-gray-700 transition-colors shadow-md cursor-pointer">
-            <div className="w-12 h-12 flex items-center justify-center bg-indigo-900/50 rounded-full mb-2">
-              <CheckSquare size={24} className="text-blue-400" />
-            </div>
-            <span className="font-medium text-gray-200">Task</span>
-          </div>
-
-          {/* Profile */}
-          <Link
-            to="/profile"
-            className="bg-gray-800 rounded-lg border border-indigo-500/30 p-4 flex flex-col items-center justify-center hover:bg-gray-700 transition-colors shadow-md"
-          >
-            <div className="w-12 h-12 flex items-center justify-center bg-indigo-900/50 rounded-full mb-2">
-              <User size={24} className="text-purple-400" />
-            </div>
-            <span className="font-medium text-gray-200">Profile</span>
-          </Link>
-
-          {/* Transactions */}
-          <div className="bg-gray-800 rounded-lg border border-indigo-500/30 p-4 flex flex-col items-center justify-center hover:bg-gray-700 transition-colors shadow-md cursor-pointer">
-            <div className="w-12 h-12 flex items-center justify-center bg-indigo-900/50 rounded-full mb-2">
-              <FileText size={24} className="text-teal-400" />
-            </div>
-            <span className="font-medium text-gray-200">Transac</span>
-          </div>
-
-          {/* Refer */}
-          <div className="bg-gray-800 rounded-lg border border-indigo-500/30 p-4 flex flex-col items-center justify-center hover:bg-gray-700 transition-colors shadow-md cursor-pointer">
-            <div className="w-12 h-12 flex items-center justify-center bg-indigo-900/50 rounded-full mb-2">
-              <Users size={24} className="text-pink-400" />
-            </div>
-            <span className="font-medium text-gray-200">Refer</span>
-          </div>
-
-          {/* Helpline */}
-          <Link to="/Helpline">
-            <div className="bg-gray-800 rounded-lg border border-indigo-500/30 p-4 flex flex-col items-center justify-center hover:bg-gray-700 transition-colors shadow-md cursor-pointer">
-              <div className="w-12 h-12 flex items-center justify-center bg-indigo-900/50 rounded-full mb-2">
-                <MessageCircle size={24} className="text-orange-400" />
-              </div>
-              <span className="font-medium text-gray-200">Helpline</span>
-            </div>
-          </Link>
-        </div>
-      </div>
-
-      {/* Trading Banner */}
-      <div className="container mx-auto px-4 py-6 mb-8">
-        <Link to="/BettingSystem">
-          <div className="bg-gradient-to-r from-indigo-900/40 to-purple-900/40 backdrop-blur-sm border border-indigo-500/30 rounded-xl overflow-hidden shadow-xl hover:border-indigo-500/60 transition-all">
-            <div className="p-6 flex flex-col md:flex-row items-center">
-              <div className="mb-4 md:mb-0 md:mr-6 flex-shrink-0">
-                <div className="bg-indigo-900/50 p-4 rounded-full">
-                  <TrendingUp size={32} className="text-indigo-400" />
-                </div>
-              </div>
-              <div className="text-center md:text-left md:flex-grow">
-                <h3 className="text-xl font-bold text-white">
-                  Start Trading Now
-                </h3>
-                <p className="text-indigo-300 mt-1">
-                  Access our advanced trading platform and multiply your
-                  earnings
-                </p>
-              </div>
-              <div className="mt-4 md:mt-0">
-                <button className="px-4 py-2 bg-indigo-600 rounded text-white text-sm flex items-center hover:bg-indigo-500 transition-colors">
-                  <ExternalLink size={14} className="mr-2" />
-                  <span>Start Trading</span>
-                </button>
-              </div>
-            </div>
-          </div>
-        </Link>
-      </div>
-
       {/* App Download Banner */}
-      <div className="container mx-auto px-4 py-6 pb-32">
+      {/* <div className="container mx-auto px-4 py-6 pb-32">
         <div className="bg-gray-800 rounded-lg overflow-hidden shadow-xl border border-indigo-500/30 hover:border-indigo-500/60 transition-colors">
           <div className="flex flex-col sm:flex-row items-center p-6">
             <div className="w-full sm:w-1/4 flex justify-center mb-4 sm:mb-0">
@@ -706,11 +709,15 @@ const UserDashboard = () => {
             </div>
           </div>
         </div>
-      </div>
+      </div> */}
 
       <TestimonialsDisplay />
 
       <PartnersDisplay />
+
+      <div className="pb-20">
+        <Footer />
+      </div>
 
       {/* Bottom Indicator */}
       <div className="fixed bottom-0 left-0 right-0 bg-gray-800 border-t border-gray-700 py-2 flex justify-center">

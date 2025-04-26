@@ -25,6 +25,10 @@ import PartnersDisplay from "../components/User/PartnersDisplay/PartnersDisplay"
 import AdminTestimonialsManagement from "../components/Admin/AdminTestimonialsManagement/AdminTestimonialsManagement";
 import AdminUsersManagement from "../components/Admin/AdminUsersManagement/AdminUsersManagement";
 import AdminPaymentMethod from "../components/Admin/AdminPaymentMethod/AdminPaymentMethod";
+import AdminNewRegisterBonus from "../components/Admin/AdminNewRegisterBonus/AdminNewRegisterBonus";
+import AdminReffarSetting from "../components/Admin/AdminReffarSetting/AdminReffarSetting";
+import DetailsReferralDetails from "../components/User/DetailsReferralDetails/DetailsReferralDetails";
+import AdminSocialMedia from "../components/Admin/AdminSocialMedia/AdminSocialMedia";
 
 export const router = createBrowserRouter([
   {
@@ -59,6 +63,10 @@ export const router = createBrowserRouter([
         path: "/PartnersDisplay",
         element: <PartnersDisplay />,
       },
+      {
+        path: "/DetailsReferralDetails",
+        element: <DetailsReferralDetails />,
+      },
     ],
   },
   // Admin Login Page
@@ -92,6 +100,14 @@ export const router = createBrowserRouter([
         ),
       },
       {
+        path: "AdminSocialMedia ",
+        element: (
+          <AdminProtectedRoute>
+            <AdminSocialMedia />
+          </AdminProtectedRoute>
+        ),
+      },
+      {
         path: "AdminPaymentMethod",
         element: (
           <AdminProtectedRoute>
@@ -104,6 +120,22 @@ export const router = createBrowserRouter([
         element: (
           <AdminProtectedRoute>
             <AdminEmailPasswordChange />
+          </AdminProtectedRoute>
+        ),
+      },
+      {
+        path: "AdminNewRegisterBonus",
+        element: (
+          <AdminProtectedRoute>
+            <AdminNewRegisterBonus />
+          </AdminProtectedRoute>
+        ),
+      },
+      {
+        path: "AdminReffarSetting",
+        element: (
+          <AdminProtectedRoute>
+            <AdminReffarSetting />
           </AdminProtectedRoute>
         ),
       },
