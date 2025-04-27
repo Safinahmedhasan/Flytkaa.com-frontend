@@ -11,9 +11,9 @@ import {
   Download,
 } from "lucide-react";
 import { Link, useLocation } from "react-router-dom";
-import logo from "../../assets/logo.jpg";
+import logo from "../../../assets/logo.jpg";
 
-const Navbar = () => {
+const BattingNavbar = () => {
   const [isLoggedIn, setIsLoggedIn] = useState(false);
   const [userData, setUserData] = useState(null);
   const [showAppModal, setShowAppModal] = useState(false);
@@ -69,46 +69,48 @@ const Navbar = () => {
   return (
     <>
       {/* Logo Bar - Now shown on all devices */}
-      <div className="fixed top-0 left-0 right-0 z-50 bg-gray-900/95 backdrop-blur-md shadow-lg h-16">
-        <div className="max-w-7xl mx-auto px-4">
-          <div className="flex justify-between items-center h-16">
-            <div className="flex items-center">
-              <a href="/" className="flex items-center group">
-                <div className="h-9 w-9 rounded-md bg-gradient-to-br from-blue-500 to-purple-600 flex items-center justify-center mr-2 shadow-md group-hover:shadow-blue-500/20 transition-shadow">
-                  <img src={logo} alt="Flytkaa" className="rounded-full" />
-                </div>
-                <h1 className="text-xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-blue-400 to-purple-600">
-                  Flytkaa
-                </h1>
-              </a>
-            </div>
+      <div className="md:block hidden">
+        <div className="fixed top-0 left-0 right-0 z-50 bg-gray-900/95 backdrop-blur-md shadow-lg h-16">
+          <div className="max-w-7xl mx-auto px-4">
+            <div className="flex justify-between items-center h-16">
+              <div className="flex items-center">
+                <a href="/" className="flex items-center group">
+                  <div className="h-9 w-9 rounded-md bg-gradient-to-br from-blue-500 to-purple-600 flex items-center justify-center mr-2 shadow-md group-hover:shadow-blue-500/20 transition-shadow">
+                    <img src={logo} alt="Flytkaa" className="rounded-full" />
+                  </div>
+                  <h1 className="text-xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-blue-400 to-purple-600">
+                    Flytkaa
+                  </h1>
+                </a>
+              </div>
 
-            <div className="flex items-center space-x-2">
-              {!isLoggedIn && (
-                <>
-                  <Link
-                    to="/login"
-                    className="px-3 py-1.5 text-sm border border-blue-500 text-blue-500 rounded-md hover:bg-blue-500 hover:text-white transition-all"
-                  >
-                    Log In
-                  </Link>
-                  <Link
-                    to="/register"
-                    className="px-3 py-1.5 text-sm bg-gradient-to-r from-blue-500 to-purple-600 text-white rounded-md hover:from-blue-600 hover:to-purple-700 transition-all"
-                  >
-                    Sign Up
-                  </Link>
-                </>
-              )}
+              <div className="flex items-center space-x-2">
+                {!isLoggedIn && (
+                  <>
+                    <Link
+                      to="/login"
+                      className="px-3 py-1.5 text-sm border border-blue-500 text-blue-500 rounded-md hover:bg-blue-500 hover:text-white transition-all"
+                    >
+                      Log In
+                    </Link>
+                    <Link
+                      to="/register"
+                      className="px-3 py-1.5 text-sm bg-gradient-to-r from-blue-500 to-purple-600 text-white rounded-md hover:from-blue-600 hover:to-purple-700 transition-all"
+                    >
+                      Sign Up
+                    </Link>
+                  </>
+                )}
 
-              <button
-                onClick={toggleAppModal}
-                className="px-3 py-1.5 bg-gradient-to-r from-green-500 to-teal-500 text-white rounded-full text-sm flex items-center hover:from-green-600 hover:to-teal-600 transition-all shadow-md"
-              >
-                <Download size={16} className="mr-1" />
-                <span className="hidden sm:inline">Download App</span>
-                <span className="sm:hidden">App</span>
-              </button>
+                <button
+                  onClick={toggleAppModal}
+                  className="px-3 py-1.5 bg-gradient-to-r from-green-500 to-teal-500 text-white rounded-full text-sm flex items-center hover:from-green-600 hover:to-teal-600 transition-all shadow-md"
+                >
+                  <Download size={16} className="mr-1" />
+                  <span className="hidden sm:inline">Download App</span>
+                  <span className="sm:hidden">App</span>
+                </button>
+              </div>
             </div>
           </div>
         </div>
@@ -281,4 +283,4 @@ const Navbar = () => {
   );
 };
 
-export default Navbar;
+export default BattingNavbar;

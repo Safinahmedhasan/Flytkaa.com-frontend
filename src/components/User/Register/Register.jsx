@@ -104,12 +104,10 @@ const UserRegistration = () => {
       return false;
     }
 
-    // Phone number validation
-    const phoneRegex = /^\+?[1-9]\d{1,14}$/;
-    if (!phoneRegex.test(formData.phoneNumber)) {
-      setError(
-        "Please enter a valid phone number with country code (e.g., +8801XXXXXXXXX)"
-      );
+    // Phone number validation - Removed country code validation
+    // Now we just check if the field is not empty
+    if (!formData.phoneNumber.trim()) {
+      setError("Please enter a phone number");
       return false;
     }
 
@@ -346,7 +344,7 @@ const UserRegistration = () => {
                 </div>
               </div>
 
-              {/* Phone Number Field */}
+              {/* Phone Number Field - Modified to accept any input */}
               <div className="relative group">
                 <label
                   htmlFor="phoneNumber"
@@ -363,10 +361,13 @@ const UserRegistration = () => {
                     value={formData.phoneNumber}
                     onChange={handleChange}
                     className="w-full p-3 pl-4 bg-gray-700 border border-gray-600 text-white rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-all duration-200"
-                    placeholder="Enter phone number with country code (e.g., +8801XXXXXXXXX)"
+                    placeholder="Enter your phone number"
                     required
                   />
                 </div>
+                <p className="mt-1 text-xs text-gray-400">
+                  Any phone number format is accepted
+                </p>
               </div>
 
               {/* Referral Code Field (Optional) */}
