@@ -206,7 +206,7 @@ const Withdraw = () => {
   const formatCurrency = (amount) => {
     return new Intl.NumberFormat("en-US", {
       style: "currency",
-      currency: "USD",
+      currency: "BDT",
       minimumFractionDigits: 2,
     }).format(amount);
   };
@@ -590,7 +590,8 @@ const Withdraw = () => {
                       </label>
                       <div className="relative">
                         <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                          <DollarSign className="w-4 h-4 sm:w-5 sm:h-5 text-gray-400" />
+                          {/* <DollarSign className="w-4 h-4 sm:w-5 sm:h-5 text-gray-400" />
+                          <p>BDT</p> */}
                         </div>
                         <input
                           type="number"

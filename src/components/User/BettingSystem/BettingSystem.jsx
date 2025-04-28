@@ -1,5 +1,6 @@
 import { useState, useEffect, useRef } from "react";
 import {
+  DollarSign,
   TrendingUp,
   TrendingDown,
   BarChart2,
@@ -13,10 +14,14 @@ import {
   ChevronDown,
   Info,
   Wallet,
+  Repeat,
   Menu,
   X,
+  ArrowUp,
   MessageSquare,
+  Bell,
   Settings,
+  PercentIcon,
   Plus,
   Minus,
 } from "lucide-react";
@@ -43,8 +48,13 @@ const BettingSystem = () => {
     winRate: 50,
     minMultiplier: 1.0,
     maxMultiplier: 5.0,
-    minBetAmount: 500.0, // Default minimum bet amount in BDT
+    minBetAmount: 5.0, // Default minimum bet amount in BDT
   });
+
+  // States for currency loading
+  const [currencyRateLoading, setCurrencyRateLoading] = useState(false);
+  const [currencyRateError, setCurrencyRateError] = useState(null);
+  const [exchangeRateLastUpdated, setExchangeRateLastUpdated] = useState(null);
 
   // User data and betting state
   const [userData, setUserData] = useState({
@@ -84,13 +94,12 @@ const BettingSystem = () => {
     useState(false);
   const [requiredAmount, setRequiredAmount] = useState(0);
   const [showMinBetAmountModal, setShowMinBetAmountModal] = useState(false);
-  const [minBetAmountRequired, setMinBetAmountRequired] = useState(500.0);
+  const [minBetAmountRequired, setMinBetAmountRequired] = useState(5.0);
   const [currentBetAmount, setCurrentBetAmount] = useState(0);
 
   // Refs
   const gameGraphRef = useRef(null);
   const betInputRef = useRef(null);
-
   // Format date
   const formatDate = (date) => {
     if (!date) return "Unknown";
@@ -111,21 +120,18 @@ const BettingSystem = () => {
         throw new Error("Failed to fetch system settings");
       }
       const data = await response.json();
-      setSystemSettings({
-        ...data,
-        minBetAmount: data.minBetAmount * 122, // Convert USD minimum to BDT equivalent
-      });
+      setSystemSettings(data);
     } catch (error) {
       setSystemSettings({
         winRate: 50,
         minMultiplier: 1.0,
         maxMultiplier: 5.0,
-        minBetAmount: 500.0, // Default in BDT
+        minBetAmount: 5.0,
       });
     }
   };
 
-  // Format currency (always BDT)
+  // Format currency as BDT
   const formatCurrency = (amount) => {
     return new Intl.NumberFormat("bn-BD", {
       style: "currency",
@@ -153,10 +159,11 @@ const BettingSystem = () => {
 
     return (
       <p className="text-xs text-gray-400 mt-1">
-        Minimum bet: <span>৳{systemSettings.minBetAmount.toFixed(2)}</span>
+        Minimum bet: ৳{systemSettings.minBetAmount.toFixed(2)}
       </p>
     );
   };
+
   // Fetch user profile to get balance
   const fetchUserData = async () => {
     try {
@@ -301,7 +308,6 @@ const BettingSystem = () => {
       if (timerId) clearInterval(timerId);
     };
   };
-
   // Handle bet amount input
   const handleBetAmountChange = (e) => {
     const value = e.target.value;
@@ -321,7 +327,7 @@ const BettingSystem = () => {
 
     // Otherwise increment by 10%
     const currentAmount = parseFloat(betAmount);
-    const increment = Math.max(currentAmount * 0.1, 100);
+    const increment = Math.max(currentAmount * 0.1, 1);
     const newAmount = (currentAmount + increment).toFixed(2);
     setBetAmount(newAmount);
   };
@@ -330,12 +336,12 @@ const BettingSystem = () => {
     if (!betAmount || parseFloat(betAmount) <= 0) return;
 
     const currentAmount = parseFloat(betAmount);
+    // Calculate minimum allowed
+    const minBet = systemSettings.minBetAmount;
+
     // Don't go below minimum bet
-    const decrement = Math.max(currentAmount * 0.1, 100);
-    const newAmount = Math.max(
-      currentAmount - decrement,
-      systemSettings.minBetAmount
-    ).toFixed(2);
+    const decrement = Math.max(currentAmount * 0.1, 1);
+    const newAmount = Math.max(currentAmount - decrement, minBet).toFixed(2);
     setBetAmount(newAmount);
   };
 
@@ -386,16 +392,6 @@ const BettingSystem = () => {
     setBetAmount(minBetAmountRequired.toString());
   };
 
-  // Mobile navigation
-  const toggleMobileMenu = () => {
-    setMobileMenuOpen(!mobileMenuOpen);
-  };
-
-  // Toggle bet controls visibility on mobile
-  const toggleBetControls = () => {
-    setShowBetControls(!showBetControls);
-  };
-
   // Place bet and process game result
   const handlePlaceBet = async (e) => {
     e?.preventDefault();
@@ -405,19 +401,19 @@ const BettingSystem = () => {
       return;
     }
 
-    const betAmountValue = parseFloat(betAmount);
+    const betAmountBDT = parseFloat(betAmount);
 
     // Check minimum bet amount
-    if (betAmountValue < systemSettings.minBetAmount) {
-      setCurrentBetAmount(betAmountValue);
+    if (betAmountBDT < systemSettings.minBetAmount) {
+      setCurrentBetAmount(betAmountBDT);
       setMinBetAmountRequired(systemSettings.minBetAmount);
       setShowMinBetAmountModal(true);
       return;
     }
 
     // Check if user has sufficient balance
-    if (betAmountValue > userData.balance) {
-      setRequiredAmount(betAmountValue);
+    if (betAmountBDT > userData.balance) {
+      setRequiredAmount(betAmountBDT);
       setShowInsufficientBalanceModal(true);
       return;
     }
@@ -435,7 +431,7 @@ const BettingSystem = () => {
           "Content-Type": "application/json",
         },
         body: JSON.stringify({
-          amount: betAmountValue / 122, // Convert BDT to USD for backend
+          amount: betAmountBDT,
           multiplier: parseFloat(multiplier),
         }),
       });
@@ -445,8 +441,8 @@ const BettingSystem = () => {
 
         // Check if this is a minimum bet amount error
         if (errorData.code === "MIN_BET_AMOUNT_ERROR") {
-          setCurrentBetAmount(betAmountValue);
-          setMinBetAmountRequired(errorData.minBetAmount * 122); // Convert USD to BDT
+          setCurrentBetAmount(betAmountBDT);
+          setMinBetAmountRequired(errorData.minBetAmount);
           setShowMinBetAmountModal(true);
           setIsPlacingBet(false);
           return;
@@ -473,19 +469,11 @@ const BettingSystem = () => {
 
       // Show the result after animation
       setTimeout(() => {
-        setGameResult({
-          ...data,
-          bet: {
-            ...data.bet,
-            amount: data.bet.amount * 122, // Convert USD to BDT
-            actualWinning: data.bet.actualWinning * 122, // Convert USD to BDT
-            potentialWinning: data.bet.potentialWinning * 122, // Convert USD to BDT
-          },
-        });
+        setGameResult(data);
 
         // Show success/failure message
         if (data.bet.won) {
-          const winningAmount = (data.bet.actualWinning * 122).toFixed(2);
+          const winningAmount = data.bet.actualWinning.toFixed(2);
           setSuccess(`You won ৳${winningAmount}!`);
 
           // Update the trading chart to show win
@@ -516,6 +504,16 @@ const BettingSystem = () => {
     } finally {
       setIsPlacingBet(false);
     }
+  };
+
+  // Mobile navigation
+  const toggleMobileMenu = () => {
+    setMobileMenuOpen(!mobileMenuOpen);
+  };
+
+  // Toggle bet controls visibility on mobile
+  const toggleBetControls = () => {
+    setShowBetControls(!showBetControls);
   };
   // Render the balance card
   const renderBalanceCard = () => (
@@ -727,9 +725,6 @@ const BettingSystem = () => {
             <TrendingUp className="w-5 h-5 text-blue-400 mr-2" />
             Place Your Trade
           </h3>
-          <span className="flex items-center py-1 px-2 bg-gray-700 rounded-lg text-sm">
-            BDT
-          </span>
         </div>
       </div>
 
@@ -799,7 +794,7 @@ const BettingSystem = () => {
           </button>
         </div>
 
-        {/* Quick Amounts - only for BDT */}
+        {/* Quick Amounts - adjusted based on minimum bet */}
         <div className="grid grid-cols-4 gap-2 mb-4">
           <button
             type="button"
@@ -809,9 +804,7 @@ const BettingSystem = () => {
             className="bg-gray-700 hover:bg-gray-600 text-sm py-2 rounded-md transition-colors"
             disabled={isPlacingBet || isRunningGame}
           >
-            <span>
-              ৳{Math.max(1000, Math.ceil(systemSettings.minBetAmount))}
-            </span>
+            ৳{Math.max(1000, Math.ceil(systemSettings.minBetAmount))}
           </button>
           <button
             type="button"
@@ -821,9 +814,7 @@ const BettingSystem = () => {
             className="bg-gray-700 hover:bg-gray-600 text-sm py-2 rounded-md transition-colors"
             disabled={isPlacingBet || isRunningGame}
           >
-            <span>
-              ৳{Math.max(5000, Math.ceil(systemSettings.minBetAmount))}
-            </span>
+            ৳{Math.max(5000, Math.ceil(systemSettings.minBetAmount))}
           </button>
           <button
             type="button"
@@ -833,9 +824,7 @@ const BettingSystem = () => {
             className="bg-gray-700 hover:bg-gray-600 text-sm py-2 rounded-md transition-colors"
             disabled={isPlacingBet || isRunningGame}
           >
-            <span>
-              ৳{Math.max(10000, Math.ceil(systemSettings.minBetAmount))}
-            </span>
+            ৳{Math.max(10000, Math.ceil(systemSettings.minBetAmount))}
           </button>
           <button
             type="button"
@@ -845,9 +834,7 @@ const BettingSystem = () => {
             className="bg-gray-700 hover:bg-gray-600 text-sm py-2 rounded-md transition-colors"
             disabled={isPlacingBet || isRunningGame}
           >
-            <span>
-              ৳{Math.max(50000, Math.ceil(systemSettings.minBetAmount))}
-            </span>
+            ৳{Math.max(50000, Math.ceil(systemSettings.minBetAmount))}
           </button>
         </div>
 
@@ -1047,9 +1034,7 @@ const BettingSystem = () => {
         )}
       </div>
     </div>
-  );
-
-  // Render recent games
+  ); // Render recent games
   const renderRecentGames = () => (
     <div className="bg-gray-800/50 backdrop-blur-sm border border-gray-700 rounded-xl overflow-hidden shadow-xl mb-4">
       <div className="p-4 border-b border-gray-700 flex justify-between items-center">
@@ -1144,8 +1129,7 @@ const BettingSystem = () => {
                     </div>
                     <div>
                       <h4 className="font-medium flex items-center text-sm">
-                        <span>{formatCurrency(bet.amount * 122)}</span>{" "}
-                        {/* Convert USD to BDT */}
+                        {formatCurrency(bet.amount)}
                         <span className="mx-1">at</span>
                         {bet.multiplier.toFixed(2)}x
                         {bet.won && (
@@ -1169,17 +1153,9 @@ const BettingSystem = () => {
                       }`}
                     >
                       {bet.won ? (
-                        <>
-                          <span>
-                            +{formatCurrency(bet.actualWinning * 122)}
-                          </span>{" "}
-                          {/* Convert USD to BDT */}
-                        </>
+                        <>+{formatCurrency(bet.actualWinning)}</>
                       ) : (
-                        <>
-                          <span>-{formatCurrency(bet.amount * 122)}</span>{" "}
-                          {/* Convert USD to BDT */}
-                        </>
+                        <>-{formatCurrency(bet.amount)}</>
                       )}
                     </p>
                   </div>
@@ -1231,7 +1207,7 @@ const BettingSystem = () => {
             <div>
               <h4 className="font-medium">Enter Trade Amount</h4>
               <p className="text-sm text-gray-400 mt-1">
-                Minimum: <span>৳{systemSettings.minBetAmount.toFixed(2)}</span>
+                Minimum: ৳{systemSettings.minBetAmount.toFixed(2)}
               </p>
             </div>
           </div>
@@ -1266,15 +1242,14 @@ const BettingSystem = () => {
         </div>
       </div>
     </div>
-  );
-  // Main layout
+  ); // Main layout
   return (
     <div className="min-h-screen bg-gradient-to-b from-gray-900 to-black text-white">
       {/* Fixed Header */}
       <header className="fixed top-0 left-0 right-0 bg-gray-900/95 backdrop-blur-md z-50 border-b border-gray-800">
         <div className="max-w-6xl mx-auto px-4 py-3 flex justify-between items-center">
           <h1 className="text-xl font-bold flex items-center">
-            <span className="mr-2 text-blue-400 h-6 w-6">৳</span>
+            <DollarSign className="mr-2 text-blue-400 h-6 w-6" />
             <span>Trading System</span>
           </h1>
 

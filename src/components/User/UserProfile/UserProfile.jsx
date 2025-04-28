@@ -222,9 +222,16 @@ const UserProfile = () => {
   const formatCurrency = (amount) => {
     return new Intl.NumberFormat("en-US", {
       style: "currency",
-      currency: "USD",
+      currency: "BDT",
     }).format(amount);
   };
+  // const formatCurrency = (amount) => {
+  //   return new Intl.NumberFormat("bn-BD", {
+  //     style: "currency",
+  //     currency: "BDT",
+  //     minimumFractionDigits: 2,
+  //   }).format(amount);
+  // };
 
   // Handle edit form input changes
   const handleInputChange = (e) => {

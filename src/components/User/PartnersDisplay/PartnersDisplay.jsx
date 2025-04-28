@@ -154,7 +154,7 @@ const PartnersDisplay = () => {
             Our Partners
           </h2>
           <p className="text-gray-400 max-w-2xl mx-auto text-sm">
-            We collaborate with trusted partners to provide you with the best gaming experience
+            We collaborate with trusted partners to provide you with the best Trading experience
           </p>
         </div>
         

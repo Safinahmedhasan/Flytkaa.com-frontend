@@ -27,7 +27,7 @@ const MinimumBetAmountModal = ({
         <div className="p-5 border-b border-gray-700 flex justify-between items-center">
           <h3 className="text-lg font-semibold flex items-center text-white">
             <AlertCircle className="w-5 h-5 text-amber-400 mr-2" />
-            Bet Amount Too Low
+            Trade Amount Too Low
           </h3>
           <button
             onClick={onClose}
@@ -43,11 +43,11 @@ const MinimumBetAmountModal = ({
               <AlertCircle className="w-8 h-8 text-amber-400" />
             </div>
             <h4 className="text-xl font-bold text-white mb-2">
-              Minimum Bet Required
+              Minimum Trade Required
             </h4>
             <p className="text-gray-300">
-              Your bet amount ({currencySymbol}
-              {formattedCurrentAmount}) is below the minimum required bet of{" "}
+              Your Trade amount ({currencySymbol}
+              {formattedCurrentAmount}) is below the minimum required Trade of{" "}
               {currencySymbol}
               {formattedMinAmount}.
             </p>
@@ -55,7 +55,7 @@ const MinimumBetAmountModal = ({
 
           <div className="bg-gray-700/50 p-4 rounded-lg mb-4">
             <div className="flex justify-between items-center mb-2">
-              <span className="text-gray-400">Your Bet:</span>
+              <span className="text-gray-400">Your Trade:</span>
               <span className="text-red-400 font-semibold">
                 {currencySymbol}
                 {formattedCurrentAmount}
@@ -75,12 +75,12 @@ const MinimumBetAmountModal = ({
               onClick={onClose}
               className="flex-1 py-3 bg-blue-600 hover:bg-blue-500 text-white rounded-lg transition-colors"
             >
-              Update Bet Amount
+              Update Trade Amount
             </button>
           </div>
 
           <p className="text-center text-sm text-gray-400 mt-4">
-            Our platform requires a minimum bet of {currencySymbol}
+            Our platform requires a minimum Trade of {currencySymbol}
             {formattedMinAmount} for all trades.
           </p>
         </div>

@@ -3,13 +3,17 @@ import { MessageSquare, Star, ChevronLeft, ChevronRight, Quote, Users } from 'lu
 
 const TestimonialsDisplay = () => {
   const [testimonials, setTestimonials] = useState([]);
+  const [displayTestimonials, setDisplayTestimonials] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [currentSlide, setCurrentSlide] = useState(0);
   const [touchStart, setTouchStart] = useState(0);
   const [isHovering, setIsHovering] = useState(false);
+  const [isTransitioning, setIsTransitioning] = useState(false);
+  const [slideWidth, setSlideWidth] = useState(0);
   const autoRotateIntervalRef = useRef(null);
   const carouselRef = useRef(null);
+  const slideContainerRef = useRef(null);
   
   // API URL from environment variables
   const API_URL = import.meta.env.VITE_DataHost;
@@ -23,18 +27,13 @@ const TestimonialsDisplay = () => {
     return 2; // Default
   };
   
-  // Calculate number of total slides
-  const getTotalSlides = () => {
-    if (testimonials.length <= getVisibleCount()) return 1;
-    return testimonials.length - getVisibleCount() + 1;
-  };
-  
   // Fetch testimonials on component mount
   useEffect(() => {
     fetchTestimonials();
     
     // Add window resize listener
     const handleResize = () => {
+      updateSlideWidth();
       // Reset to first slide when screen size changes
       setCurrentSlide(0);
     };
@@ -49,18 +48,87 @@ const TestimonialsDisplay = () => {
     };
   }, []);
   
-  // Start auto-rotation when testimonials are loaded
+  // Setup carousel with cloned items for infinite scrolling
   useEffect(() => {
-    if (testimonials.length > getVisibleCount()) {
-      startAutoRotation();
+    if (testimonials.length > 0) {
+      setupInfiniteCarousel();
+      updateSlideWidth();
+    }
+  }, [testimonials]);
+  
+  // Update slide position when currentSlide changes
+  useEffect(() => {
+    if (testimonials.length > 0) {
+      updateSlidePosition();
+    }
+  }, [currentSlide]);
+  
+  // Update slide width calculation on window resize
+  const updateSlideWidth = () => {
+    if (slideContainerRef.current) {
+      const containerWidth = slideContainerRef.current.offsetWidth;
+      const visibleCount = getVisibleCount();
+      setSlideWidth(containerWidth / visibleCount);
+    }
+  };
+  
+  // Setup infinite carousel by adding clones at beginning and end
+  const setupInfiniteCarousel = () => {
+    if (testimonials.length <= 1) {
+      setDisplayTestimonials(testimonials);
+      return;
     }
     
-    return () => {
-      if (autoRotateIntervalRef.current) {
-        clearInterval(autoRotateIntervalRef.current);
-      }
-    };
-  }, [testimonials]);
+    const visibleCount = getVisibleCount();
+    
+    // Create clones for infinite scrolling
+    const cloneCount = Math.min(visibleCount, testimonials.length);
+    const beforeClones = testimonials.slice(-cloneCount);
+    const afterClones = testimonials.slice(0, cloneCount);
+    
+    const newDisplayTestimonials = [
+      ...beforeClones.map(item => ({ ...item, isClone: true, originalIndex: testimonials.indexOf(item) })),
+      ...testimonials.map((item, index) => ({ ...item, originalIndex: index })),
+      ...afterClones.map(item => ({ ...item, isClone: true, originalIndex: testimonials.indexOf(item) }))
+    ];
+    
+    setDisplayTestimonials(newDisplayTestimonials);
+    // Start at first real item (after clones)
+    setCurrentSlide(cloneCount);
+    
+    // Start auto-rotation
+    startAutoRotation();
+  };
+  
+  // Update slide position with transition or instant jump for infinite loop effect
+  const updateSlidePosition = () => {
+    if (!slideContainerRef.current || displayTestimonials.length === 0) return;
+    
+    const visibleCount = getVisibleCount();
+    const cloneCount = Math.min(visibleCount, testimonials.length);
+    const totalRealSlides = testimonials.length;
+    
+    // If we're at a clone position, we'll need to jump after animation completes
+    if (currentSlide < cloneCount) {
+      // We're at the beginning clones
+      setIsTransitioning(true);
+      
+      // After transition completes, jump to the real slides
+      setTimeout(() => {
+        setIsTransitioning(false);
+        setCurrentSlide(totalRealSlides + currentSlide);
+      }, 700); // Match transition duration
+    } else if (currentSlide >= cloneCount + totalRealSlides) {
+      // We're at the end clones
+      setIsTransitioning(true);
+      
+      // After transition completes, jump to the beginning of real slides
+      setTimeout(() => {
+        setIsTransitioning(false);
+        setCurrentSlide(cloneCount + (currentSlide - cloneCount - totalRealSlides));
+      }, 700); // Match transition duration
+    }
+  };
   
   // Start automatic rotation
   const startAutoRotation = () => {
@@ -68,11 +136,13 @@ const TestimonialsDisplay = () => {
       clearInterval(autoRotateIntervalRef.current);
     }
     
+    if (testimonials.length <= getVisibleCount()) {
+      return; // Don't auto-rotate if all testimonials fit on screen
+    }
+    
     autoRotateIntervalRef.current = setInterval(() => {
-      if (!isHovering) {
-        setCurrentSlide(prev => 
-          prev === getTotalSlides() - 1 ? 0 : prev + 1
-        );
+      if (!isHovering && !isTransitioning) {
+        nextSlide();
       }
     }, 5000); // Rotate every 5 seconds
   };
@@ -103,7 +173,14 @@ const TestimonialsDisplay = () => {
       }
       
       const data = await response.json();
-      setTestimonials(data.testimonials || []);
+      
+      // Add a temporary unique ID if _id is missing
+      const testimonialsWithIds = (data.testimonials || []).map((item, index) => ({
+        ...item,
+        _id: item._id || `temp-id-${index}`
+      }));
+      
+      setTestimonials(testimonialsWithIds);
     } catch (error) {
       console.error('Error fetching testimonials:', error);
       setError('Failed to load testimonials');
@@ -114,25 +191,31 @@ const TestimonialsDisplay = () => {
   
   // Navigate to next slide
   const nextSlide = () => {
-    setCurrentSlide(prev => 
-      prev === getTotalSlides() - 1 ? 0 : prev + 1
-    );
+    if (isTransitioning) return;
+    setCurrentSlide(prev => prev + 1);
     pauseAutoRotation();
     setTimeout(resumeAutoRotation, 8000);
   };
   
   // Navigate to previous slide
   const prevSlide = () => {
-    setCurrentSlide(prev => 
-      prev === 0 ? getTotalSlides() - 1 : prev - 1
-    );
+    if (isTransitioning) return;
+    setCurrentSlide(prev => prev - 1);
     pauseAutoRotation();
     setTimeout(resumeAutoRotation, 8000);
   };
   
   // Navigate to specific slide
   const goToSlide = (index) => {
-    setCurrentSlide(index);
+    if (isTransitioning) return;
+    
+    const visibleCount = getVisibleCount();
+    const cloneCount = Math.min(visibleCount, testimonials.length);
+    
+    // Adjust index to account for clones
+    const targetSlide = cloneCount + index;
+    setCurrentSlide(targetSlide);
+    
     pauseAutoRotation();
     setTimeout(resumeAutoRotation, 8000);
   };
@@ -147,7 +230,7 @@ const TestimonialsDisplay = () => {
   };
   
   const handleTouchMove = (e) => {
-    if (!touchStart) return;
+    if (!touchStart || isTransitioning) return;
     
     const touchEnd = e.touches[0].clientX;
     const diff = touchStart - touchEnd;
@@ -162,6 +245,31 @@ const TestimonialsDisplay = () => {
         prevSlide();
       }
       setTouchStart(0);
+    }
+  };
+  
+  // Get the indicator count for pagination dots
+  const getIndicatorCount = () => {
+    return testimonials.length;
+  };
+  
+  // Get the active indicator index
+  const getActiveIndicatorIndex = () => {
+    if (testimonials.length === 0) return 0;
+    
+    const visibleCount = getVisibleCount();
+    const cloneCount = Math.min(visibleCount, testimonials.length);
+    
+    // Calculate based on the current position, accounting for clones
+    if (currentSlide < cloneCount) {
+      // Handle beginning clones
+      return testimonials.length - (cloneCount - currentSlide);
+    } else if (currentSlide >= cloneCount + testimonials.length) {
+      // Handle end clones
+      return currentSlide - cloneCount - testimonials.length;
+    } else {
+      // Regular slides
+      return currentSlide - cloneCount;
     }
   };
   
@@ -180,14 +288,6 @@ const TestimonialsDisplay = () => {
     );
   };
 
-  // Get visible testimonials for the current slide
-  const getVisibleTestimonials = () => {
-    const visibleCount = getVisibleCount();
-    const start = currentSlide;
-    const end = start + visibleCount;
-    return testimonials.slice(start, end);
-  };
-  
   // If no testimonials or loading, don't show the component
   if ((testimonials.length === 0 && !loading) || loading) {
     return null;
@@ -204,7 +304,7 @@ const TestimonialsDisplay = () => {
             </span>
           </h2>
           <p className="text-gray-300 max-w-xl mx-auto">
-            Join thousands of satisfied users who've transformed their gaming experience with our platform
+            Join thousands of satisfied users who've transformed their Trading experience with our platform
           </p>
           <div className="w-24 h-1 bg-gradient-to-r from-indigo-500 to-purple-500 mx-auto mt-4 rounded-full"></div>
         </div>
@@ -219,49 +319,58 @@ const TestimonialsDisplay = () => {
           onTouchMove={handleTouchMove}
         >
           {/* Testimonial cards container */}
-          <div className="overflow-hidden rounded-2xl">
+          <div 
+            className="overflow-hidden rounded-2xl"
+            ref={slideContainerRef}
+          >
             <div 
-              className="flex transition-transform ease-out duration-700"
-              style={{ transform: `translateX(-${currentSlide * 100 / getTotalSlides()}%)` }}
+              className={`flex ${isTransitioning ? 'transition-transform ease-out duration-700' : ''}`}
+              style={{ 
+                transform: `translateX(-${currentSlide * (100 / getVisibleCount())}%)`,
+                width: `${(displayTestimonials.length / getVisibleCount()) * 100}%`
+              }}
             >
-              {testimonials.map((testimonial, index) => (
+              {displayTestimonials.map((testimonial, index) => (
                 <div
-                  key={testimonial._id || index}
-                  className="flex-none w-full md:w-1/2 p-3"
+                  key={`${testimonial._id}-${index}`}
+                  className="flex-none"
+                  style={{ width: `${100 / displayTestimonials.length}%` }}
                 >
-                  <div className="h-full bg-gradient-to-br from-gray-800 to-gray-900 rounded-xl overflow-hidden shadow-xl border border-gray-700 hover:border-indigo-500/30 transition-all duration-300 transform hover:-translate-y-1">
-                    <div className="p-6 relative h-full flex flex-col">
-                      <div className="absolute top-4 right-4 text-indigo-400 opacity-30">
-                        <Quote size={40} />
-                      </div>
-                      
-                      <div className="flex items-center mb-4 z-10">
-                        <div className="w-16 h-16 rounded-full overflow-hidden border-2 border-indigo-500/30 shadow-lg flex-shrink-0 mr-4">
-                          {testimonial.avatarUrl ? (
-                            <img 
-                              src={testimonial.avatarUrl} 
-                              alt={testimonial.name} 
-                              className="w-full h-full object-cover"
-                            />
-                          ) : (
-                            <div className="w-full h-full bg-gradient-to-br from-indigo-600 to-purple-600 flex items-center justify-center">
-                              <span className="text-white font-bold text-xl">
-                                {testimonial.name?.charAt(0).toUpperCase() || 'U'}
-                              </span>
-                            </div>
-                          )}
+                  <div className="h-full p-3">
+                    <div className="h-full bg-gradient-to-br from-gray-800 to-gray-900 rounded-xl overflow-hidden shadow-xl border border-gray-700 hover:border-indigo-500/30 transition-all duration-300 transform hover:-translate-y-1">
+                      <div className="p-6 relative h-full flex flex-col">
+                        <div className="absolute top-4 right-4 text-indigo-400 opacity-30">
+                          <Quote size={40} />
                         </div>
-                        <div>
-                          <h3 className="font-bold text-white text-lg">{testimonial.name}</h3>
-                          <p className="text-indigo-400 text-sm">{testimonial.role}</p>
-                          {renderStars(testimonial.rating)}
+                        
+                        <div className="flex items-center mb-4 z-10">
+                          <div className="w-16 h-16 rounded-full overflow-hidden border-2 border-indigo-500/30 shadow-lg flex-shrink-0 mr-4">
+                            {testimonial.avatarUrl ? (
+                              <img 
+                                src={testimonial.avatarUrl} 
+                                alt={testimonial.name} 
+                                className="w-full h-full object-cover"
+                              />
+                            ) : (
+                              <div className="w-full h-full bg-gradient-to-br from-indigo-600 to-purple-600 flex items-center justify-center">
+                                <span className="text-white font-bold text-xl">
+                                  {testimonial.name?.charAt(0).toUpperCase() || 'U'}
+                                </span>
+                              </div>
+                            )}
+                          </div>
+                          <div>
+                            <h3 className="font-bold text-white text-lg">{testimonial.name}</h3>
+                            <p className="text-indigo-400 text-sm">{testimonial.role}</p>
+                            {renderStars(testimonial.rating)}
+                          </div>
                         </div>
-                      </div>
-                      
-                      <div className="flex-grow">
-                        <p className="text-gray-300 leading-relaxed italic line-clamp-5">
-                          "{testimonial.comment}"
-                        </p>
+                        
+                        <div className="flex-grow">
+                          <p className="text-gray-300 leading-relaxed italic line-clamp-5">
+                            "{testimonial.comment}"
+                          </p>
+                        </div>
                       </div>
                     </div>
                   </div>
@@ -270,40 +379,39 @@ const TestimonialsDisplay = () => {
             </div>
           </div>
           
-          {/* Navigation arrows - only shown if we have enough testimonials */}
-          {testimonials.length > getVisibleCount() && (
-            <>
-              <button 
-                className="absolute left-0 top-1/2 -translate-y-1/2 z-20 bg-gray-800/90 hover:bg-indigo-600 text-white p-3 rounded-full shadow-lg transform transition-transform hover:scale-110 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 focus:ring-offset-gray-900"
-                onClick={prevSlide}
-                aria-label="Previous testimonials"
-              >
-                <ChevronLeft size={20} />
-              </button>
-              
-              <button 
-                className="absolute right-0 top-1/2 -translate-y-1/2 z-20 bg-gray-800/90 hover:bg-indigo-600 text-white p-3 rounded-full shadow-lg transform transition-transform hover:scale-110 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 focus:ring-offset-gray-900"
-                onClick={nextSlide}
-                aria-label="Next testimonials"
-              >
-                <ChevronRight size={20} />
-              </button>
-            </>
-          )}
+          {/* Navigation arrows - always shown for infinite carousel */}
+          <button 
+            className="absolute left-0 top-1/2 -translate-y-1/2 z-20 bg-gray-800/90 hover:bg-indigo-600 text-white p-3 rounded-full shadow-lg transform transition-transform hover:scale-110 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 focus:ring-offset-gray-900"
+            onClick={prevSlide}
+            aria-label="Previous testimonials"
+            disabled={isTransitioning}
+          >
+            <ChevronLeft size={20} />
+          </button>
+          
+          <button 
+            className="absolute right-0 top-1/2 -translate-y-1/2 z-20 bg-gray-800/90 hover:bg-indigo-600 text-white p-3 rounded-full shadow-lg transform transition-transform hover:scale-110 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 focus:ring-offset-gray-900"
+            onClick={nextSlide}
+            aria-label="Next testimonials"
+            disabled={isTransitioning}
+          >
+            <ChevronRight size={20} />
+          </button>
           
           {/* Dots indicators */}
-          {getTotalSlides() > 1 && (
+          {testimonials.length > 1 && (
             <div className="flex justify-center mt-8 space-x-2">
-              {[...Array(getTotalSlides())].map((_, index) => (
+              {[...Array(getIndicatorCount())].map((_, index) => (
                 <button
                   key={index}
                   onClick={() => goToSlide(index)}
                   className={`transition-all duration-300 focus:outline-none ${
-                    currentSlide === index 
+                    getActiveIndicatorIndex() === index 
                       ? 'w-8 h-2 bg-indigo-500 rounded-full' 
                       : 'w-2 h-2 bg-gray-600 hover:bg-gray-500 rounded-full'
                   }`}
                   aria-label={`Go to slide ${index + 1}`}
+                  disabled={isTransitioning}
                 />
               ))}
             </div>

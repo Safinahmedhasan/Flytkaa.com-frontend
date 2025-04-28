@@ -168,7 +168,7 @@ const UserDashboard = () => {
   const formatCurrency = (amount) => {
     return new Intl.NumberFormat("en-US", {
       style: "currency",
-      currency: "USD",
+      currency: "BDT",
       minimumFractionDigits: 2,
     }).format(amount);
   };
@@ -364,7 +364,7 @@ const UserDashboard = () => {
             />
             <span className="font-medium">
               {showBalance
-                ? `$ ${(userData.Balance || 0).toLocaleString("en-US", {
+                ? `BDT ${(userData.Balance || 0).toLocaleString("en-US", {
                     minimumFractionDigits: 2,
                     maximumFractionDigits: 2,
                   })}`
